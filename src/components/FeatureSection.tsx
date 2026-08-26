@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useReducedMotion } from "framer-motion";
 import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon, PauseIcon, PlayIcon } from "./Icons";
 
-const isPlaceholder = (s: string) => s.startsWith("{{");
-
-export function FeatureSection() {
+export function FeatureSection({
+  /** Server-rendered slot — this component is a client component, so the
+   *  market card is fetched on the server and passed in from page.tsx. */
+  sideCard,
+}: {
+  sideCard: ReactNode;
+}) {
   const feature = useContent().feature;
 
   return (
@@ -26,9 +30,7 @@ export function FeatureSection() {
           <Reveal>
             <MediaCard />
           </Reveal>
-          <Reveal index={1}>
-            <TestimonialCard />
-          </Reveal>
+          <Reveal index={1}>{sideCard}</Reveal>
         </div>
       </div>
     </section>
@@ -243,69 +245,5 @@ function TrafficPreview({ playing }: { playing: boolean }) {
       aria-hidden="true"
       className="absolute inset-0 h-full w-full"
     />
-  );
-}
-
-/* ── Testimonial ───────────────────────────────────────────── */
-
-function TestimonialCard() {
-  const t = useContent().feature.testimonial;
-  const pending = isPlaceholder(t.quote);
-
-  return (
-    <figure
-      className={`flex h-full flex-col justify-between rounded-[2rem] border p-8 ${
-        pending
-          ? "border-dashed border-paper-border bg-paper-card/60"
-          : "border-paper-border bg-paper-card"
-      }`}
-    >
-      {pending ? (
-        <>
-          <span className="inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-medium uppercase tracking-wider text-amber-700">
-            {t.badge}
-          </span>
-          <blockquote className="mt-6 text-lg leading-relaxed text-paper-muted">
-            {t.emptyLead}{" "}
-            <code className="rounded bg-black/5 px-1.5 py-0.5 text-[0.85em]">
-              src/content.ts
-            </code>{" "}
-            {t.emptyMid}{" "}
-            <code className="text-[0.85em]">feature.testimonial</code>{" "}
-            {t.emptyTail}
-          </blockquote>
-          <figcaption className="mt-8 text-sm text-paper-muted">
-            {t.emptyNote}
-          </figcaption>
-        </>
-      ) : (
-        <>
-          <blockquote className="text-[1.35rem] leading-[1.45] tracking-[-0.015em] text-ink">
-            “{t.quote}”
-          </blockquote>
-          <figcaption className="mt-10 flex items-center gap-4">
-            {t.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={t.avatar}
-                alt=""
-                className="h-12 w-12 rounded-full object-cover"
-              />
-            ) : (
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-accent to-accent-deep text-sm font-semibold text-white">
-                {t.name.slice(0, 1)}
-              </span>
-            )}
-            <div className="flex-1">
-              <div className="font-medium text-ink">{t.name}</div>
-              <div className="text-sm text-paper-muted">{t.role}</div>
-            </div>
-            <span className="rounded-full border border-paper-border px-3 py-1 text-xs text-paper-muted">
-              {t.tag}
-            </span>
-          </figcaption>
-        </>
-      )}
-    </figure>
   );
 }

@@ -100,6 +100,30 @@ passive, `resize` is handled too (it changes the
 
 Both canvases pause via `IntersectionObserver` when scrolled off screen.
 
+## Darwins Market card
+
+The card beside the featured project shows live BTC 5-minute candles
+(6 hours of history) as inline SVG.
+
+**It cannot be rate limited by traffic, and costs nothing:**
+
+- Data is fetched **on the server**, never in the browser. Visitors receive the
+  chart already baked into the HTML and make zero requests to any exchange.
+- `fetch(..., { next: { revalidate: 300 } })` means Next.js makes **at most one
+  upstream request per 5 minutes for the entire site**, regardless of how many
+  people are viewing it. `next build` confirms this — `/` reports `Revalidate 5m`.
+- 300s matches the candle interval; refetching faster would return the same candle.
+- All three sources are free, keyless, unauthenticated public endpoints:
+  Binance → Coinbase → Kraken, tried in order (Binance is geo-blocked in some
+  regions). If all three fail the card degrades to an "unavailable" state —
+  it never throws, so a bad upstream can't break the page or fail the build.
+
+This works unchanged on Vercel, where ISR is native: the first request after a
+5-minute window triggers one background regeneration while everyone continues
+to be served the cached page.
+
+Logic lives in `src/lib/market.ts`; rendering in `src/components/MarketCard.tsx`.
+
 ## Accessibility & responsiveness
 
 - `prefers-reduced-motion`: the cursor field is replaced by a static gradient,

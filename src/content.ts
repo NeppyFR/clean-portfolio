@@ -60,6 +60,13 @@ export const skills = [
   { name: "Access", icon: null },
 ];
 
+/** Market card that sits beside the featured project. Text is a product
+ *  name + tagline, so it reads the same in both languages. */
+export const darwinsMarket = {
+  title: "Darwins Market",
+  subtitle: "Survival of the fittest strategy. bots trade, die and evolve.",
+};
+
 const PROJECT_LINKS = {
   gradeTracker: "https://neppyfr.github.io/gradetracker/",
   trafficMesh: "https://neppyfr.github.io/traffic-mesh/",
