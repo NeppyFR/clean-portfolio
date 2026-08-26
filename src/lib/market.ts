@@ -20,8 +20,9 @@ import "server-only";
 
 export type Candle = { t: number; o: number; h: number; l: number; c: number };
 
-/** 72 candles x 5min = 6 hours of history. */
-const LIMIT = 72;
+/** 48 candles x 5min = 4 hours. Fewer than a line chart would use, so each
+ *  candlestick body stays wide enough to read in the card. */
+const LIMIT = 48;
 const REVALIDATE = 300;
 
 const opts = {

@@ -11,32 +11,11 @@ import { getBtcCandles, type Candle } from "@/lib/market";
  */
 
 const W = 400;
-const H = 132;
-const PAD = 4;
+const H = 124;
+const PAD = 5;
 
-function buildPaths(candles: Candle[]) {
-  const closes = candles.map((c) => c.c);
-  const min = Math.min(...closes);
-  const max = Math.max(...closes);
-  const span = max - min || 1;
-
-  const x = (i: number) =>
-    candles.length > 1 ? (i / (candles.length - 1)) * W : W / 2;
-  const y = (v: number) => PAD + (1 - (v - min) / span) * (H - PAD * 2);
-
-  const line = closes
-    .map((v, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(2)},${y(v).toFixed(2)}`)
-    .join(" ");
-
-  const area = `${line} L${W},${H} L0,${H} Z`;
-
-  return {
-    line,
-    area,
-    lastX: x(closes.length - 1),
-    lastY: y(closes[closes.length - 1]),
-  };
-}
+const UP = "#059669";
+const DOWN = "#e11d48";
 
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -73,10 +52,10 @@ export async function MarketCard() {
             </span>
           </div>
 
-          <Chart candles={data.candles} up={data.changePct >= 0} />
+          <Chart candles={data.candles} />
 
-          <div className="mt-4 flex items-center justify-between text-[0.7rem] uppercase tracking-[0.14em] text-paper-muted">
-            <span>BTC / USD · 5m · 6h</span>
+          <div className="mt-3 flex items-center justify-between text-[0.7rem] uppercase tracking-[0.14em] text-paper-muted">
+            <span>BTC / USD · 5m · 4h</span>
             <span className="tabular-nums">
               L {Math.round(data.low).toLocaleString("en-US")} · H{" "}
               {Math.round(data.high).toLocaleString("en-US")}
@@ -88,42 +67,72 @@ export async function MarketCard() {
           Market data unavailable right now.
         </div>
       )}
+
+      <div className="mt-5 flex items-center gap-2.5 border-t border-paper-border pt-4">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-70" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+        </span>
+        <span className="text-xs font-medium uppercase tracking-[0.18em] text-paper-muted">
+          Coming soon
+        </span>
+      </div>
     </figure>
   );
 }
 
-function Chart({ candles, up }: { candles: Candle[]; up: boolean }) {
-  const { line, area, lastX, lastY } = buildPaths(candles);
-  const stroke = up ? "#059669" : "#e11d48";
-  const id = up ? "mkt-up" : "mkt-down";
+/** Japanese candlesticks: high-low wick plus an open-close body. */
+function Chart({ candles }: { candles: Candle[] }) {
+  // Scale across the full high/low range, not just closes — otherwise wicks
+  // would clip outside the viewBox.
+  const min = Math.min(...candles.map((c) => c.l));
+  const max = Math.max(...candles.map((c) => c.h));
+  const span = max - min || 1;
+  const y = (v: number) => PAD + (1 - (v - min) / span) * (H - PAD * 2);
+
+  const slot = W / candles.length;
+  const body = Math.max(2, slot * 0.62); // leave a gap between candles
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className="mt-5 h-auto w-full"
       role="img"
-      aria-label={`Bitcoin price, last 6 hours in 5 minute candles, currently trending ${
-        up ? "up" : "down"
-      }`}
+      aria-label={`Bitcoin candlestick chart, last 4 hours in 5 minute candles`}
+      shapeRendering="crispEdges"
     >
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={stroke} stopOpacity="0.22" />
-          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={area} fill={`url(#${id})`} />
-      <path
-        d={line}
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-      <circle cx={lastX} cy={lastY} r="3.5" fill={stroke} />
-      <circle cx={lastX} cy={lastY} r="7" fill={stroke} opacity="0.18" />
+      {candles.map((c, i) => {
+        const cx = i * slot + slot / 2;
+        const rising = c.c >= c.o;
+        const colour = rising ? UP : DOWN;
+        const yHigh = y(c.h);
+        const yLow = y(c.l);
+        const yOpen = y(c.o);
+        const yClose = y(c.c);
+        const top = Math.min(yOpen, yClose);
+        // keep doji (open === close) visible as a 1px line
+        const height = Math.max(1, Math.abs(yClose - yOpen));
+
+        return (
+          <g key={c.t} fill={colour} stroke={colour}>
+            <line
+              x1={cx}
+              x2={cx}
+              y1={yHigh}
+              y2={yLow}
+              strokeWidth="1"
+              shapeRendering="auto"
+            />
+            <rect
+              x={cx - body / 2}
+              y={top}
+              width={body}
+              height={height}
+              rx={body > 4 ? 0.6 : 0}
+            />
+          </g>
+        );
+      })}
     </svg>
   );
 }
