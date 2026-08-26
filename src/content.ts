@@ -60,13 +60,6 @@ export const skills = [
   { name: "Access", icon: null },
 ];
 
-/** Market card that sits beside the featured project. Text is a product
- *  name + tagline, so it reads the same in both languages. */
-export const darwinsMarket = {
-  title: "Darwins Market",
-  subtitle: "Survival of the fittest strategy. bots trade, die and evolve.",
-};
-
 const PROJECT_LINKS = {
   gradeTracker: "https://neppyfr.github.io/gradetracker/",
   trafficMesh: "https://neppyfr.github.io/traffic-mesh/",
@@ -223,6 +216,16 @@ const en = {
     ],
   },
 
+  /** Card beside the featured project. The title is a product name and
+   *  stays as-is; the tagline is a sentence, so it gets translated. */
+  market: {
+    title: "Darwins Market",
+    subtitle: "Survival of the fittest strategy. bots trade, die and evolve.",
+    comingSoon: "Coming soon",
+    unavailable: "Market data unavailable right now.",
+    chartLabel: "Bitcoin candlestick chart, last 4 hours in 5 minute candles",
+  },
+
   skillsSection: {
     heading: "Skills & Tools",
     languagesHeading: "Languages",
@@ -366,6 +369,15 @@ const de: typeof en = {
         tags: ["JavaScript", "Canvas", "Simulation"],
       },
     ],
+  },
+
+  market: {
+    title: "Darwins Market",
+    // "entwickeln" alone is transitive; evolving needs the reflexive "sich".
+    subtitle: "Survival of the fittest. Bots traden, sterben und entwickeln sich.",
+    comingSoon: "Demnächst",
+    unavailable: "Marktdaten derzeit nicht verfügbar.",
+    chartLabel: "Bitcoin-Kerzenchart, letzte 4 Stunden in 5-Minuten-Kerzen",
   },
 
   skillsSection: {

@@ -18,7 +18,9 @@ import "server-only";
  * or failing the build.
  */
 
-export type Candle = { t: number; o: number; h: number; l: number; c: number };
+import type { Candle, MarketData } from "./market-types";
+
+export type { Candle, MarketData };
 
 /** 48 candles x 5min = 4 hours. Fewer than a line chart would use, so each
  *  candlestick body stays wide enough to read in the card. */
@@ -83,15 +85,6 @@ async function fromKraken(): Promise<Candle[]> {
     c: +k[4],
   }));
 }
-
-export type MarketData = {
-  candles: Candle[];
-  last: number;
-  changePct: number;
-  low: number;
-  high: number;
-  source: string;
-};
 
 export async function getBtcCandles(): Promise<MarketData | null> {
   const sources: [string, () => Promise<Candle[]>][] = [
