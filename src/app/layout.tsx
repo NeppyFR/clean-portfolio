@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { site } from "@/content";
+import { content } from "@/content";
+import { LanguageProvider } from "@/i18n";
 import "./globals.css";
+
+const site = content.en.site;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,8 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // lang is updated client-side by LanguageProvider when the user switches.
     <html lang="en" className={inter.variable}>
-      <body>{children}</body>
+      <body>
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

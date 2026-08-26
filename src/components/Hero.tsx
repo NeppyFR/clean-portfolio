@@ -10,7 +10,8 @@ import {
   type Variants,
 } from "framer-motion";
 import { CursorBackground } from "./CursorBackground";
-import { heroLines, heroStatus, motionSpec, site, socials } from "@/content";
+import { motionSpec, socials } from "@/content";
+import { useContent } from "@/i18n";
 import { iconMap } from "./Icons";
 
 /* ── Entrance timing ──────────────────────────────────────────
@@ -51,6 +52,7 @@ const reducedFade: Variants = {
 };
 
 export function Hero() {
+  const t = useContent();
   const reduced = useReducedMotion();
 
   // Headline parallax — drifts a few px *opposite* the cursor for depth.
@@ -91,12 +93,10 @@ export function Hero() {
             variants={container}
             initial="hidden"
             animate="show"
-            style={
-              reduced ? undefined : { x: parallaxX, y: parallaxY }
-            }
+            style={reduced ? undefined : { x: parallaxX, y: parallaxY }}
             className="max-w-3xl text-balance text-[clamp(2.5rem,7vw,5.25rem)] font-semibold leading-[1.08] tracking-[-0.035em] text-ink-text"
           >
-            {heroLines.map((text, i) => (
+            {t.heroLines.map((text, i) => (
               <motion.span
                 key={i}
                 variants={child}
@@ -134,11 +134,11 @@ export function Hero() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
               </span>
               <span className="text-xs font-medium uppercase tracking-[0.18em] text-ink-muted">
-                {heroStatus.label}
+                {t.heroStatus.label}
               </span>
             </div>
             <p className="mt-4 text-[0.98rem] leading-relaxed text-ink-text/85">
-              {heroStatus.text}
+              {t.heroStatus.text}
             </p>
           </motion.aside>
         </div>
@@ -189,7 +189,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-x-0 bottom-0 z-0 select-none overflow-hidden"
       >
         <span className="block translate-y-[18%] whitespace-nowrap text-center text-[22vw] font-bold leading-none tracking-[-0.05em] text-white/[0.055]">
-          {site.wordmark}
+          {t.site.wordmark}
         </span>
       </motion.div>
     </section>

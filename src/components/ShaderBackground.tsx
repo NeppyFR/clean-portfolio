@@ -22,6 +22,7 @@ uniform vec2  uRes;
 uniform vec2  uMouse;   // pixels, origin top-left
 uniform float uTime;
 uniform float uHasMouse;
+uniform float uScroll;  // 0 at top of document, 1 at bottom
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -54,12 +55,15 @@ void main() {
   float n = fbm(p * 2.4 + vec2(uTime * 0.045, uTime * 0.03));
   n = fbm(p * 2.4 + vec2(n, -n) * 0.6 + uTime * 0.02);
 
-  vec3 deep   = vec3(0.031, 0.031, 0.039); // #08080a
-  vec3 purple = vec3(0.486, 0.227, 0.929); // #7c3aed
-  vec3 cyan   = vec3(0.133, 0.827, 0.933); // #22d3ee
+  vec3 base = vec3(0.031, 0.031, 0.039); // #08080a
 
-  vec3 col = mix(deep, purple, smoothstep(0.35, 0.95, n) * 0.55);
-  col = mix(col, cyan, smoothstep(0.72, 1.0, n) * 0.12);
+  // Same ramp as the canvas variant, so both read identically.
+  // deep:  #7c3aed -> #1d4ed8   light: #a371f7 -> #22d3ee
+  vec3 deepTone  = mix(vec3(0.486, 0.227, 0.929), vec3(0.114, 0.306, 0.847), uScroll);
+  vec3 lightTone = mix(vec3(0.639, 0.443, 0.969), vec3(0.133, 0.827, 0.933), uScroll);
+
+  vec3 col = mix(base, deepTone, smoothstep(0.35, 0.95, n) * 0.55);
+  col = mix(col, lightTone, smoothstep(0.72, 1.0, n) * 0.12);
 
   // cursor lobe — flip Y because gl_FragCoord is bottom-left
   if (uHasMouse > 0.5) {
@@ -87,7 +91,12 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   return sh;
 }
 
-export function ShaderBackground() {
+export function ShaderBackground({
+  scrollRef,
+}: {
+  /** Shared scroll progress (0→1), owned by CursorBackground. */
+  scrollRef: React.RefObject<number>;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -129,6 +138,7 @@ export function ShaderBackground() {
     const uMouse = gl.getUniformLocation(prog, "uMouse");
     const uTime = gl.getUniformLocation(prog, "uTime");
     const uHasMouse = gl.getUniformLocation(prog, "uHasMouse");
+    const uScroll = gl.getUniformLocation(prog, "uScroll");
 
     const mouse = { x: 0, y: 0, tx: 0, ty: 0, has: 0 };
     let raf = 0;
@@ -160,6 +170,8 @@ export function ShaderBackground() {
       gl.uniform1f(uTime, (performance.now() - start) / 1000);
       gl.uniform2f(uMouse, mouse.x, mouse.y);
       gl.uniform1f(uHasMouse, mouse.has);
+      // read the shared value inside the existing loop
+      gl.uniform1f(uScroll, scrollRef.current);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       raf = requestAnimationFrame(frame);
     };
@@ -182,7 +194,7 @@ export function ShaderBackground() {
       gl.deleteShader(fs);
       gl.deleteBuffer(buf);
     };
-  }, []);
+  }, [scrollRef]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />;
 }

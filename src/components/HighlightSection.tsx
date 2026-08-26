@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { highlight, motionSpec } from "@/content";
+import { motionSpec } from "@/content";
+import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon } from "./Icons";
 
@@ -74,6 +75,7 @@ function TiltCard({
 }
 
 export function HighlightSection() {
+  const t = useContent();
   const reduced = useReducedMotion();
 
   return (
@@ -84,28 +86,31 @@ export function HighlightSection() {
           <div>
             <Reveal>
               <h2 className="max-w-lg text-balance text-[clamp(2rem,4.4vw,3.4rem)] font-semibold leading-[1.1] tracking-[-0.03em]">
-                {highlight.heading}
+                {t.highlight.heading}
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-md text-lg leading-relaxed text-paper-muted">
-                {highlight.sub}
+                {t.highlight.sub}
               </p>
             </Reveal>
             <Reveal delay={0.18}>
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <a
-                  href={highlight.button.href}
+                  href={t.highlight.button.href}
                   className="group inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-white transition-transform duration-300 hover:scale-[1.03]"
                 >
-                  {highlight.button.label}
+                  {t.highlight.button.label}
                   <ArrowUpRightIcon
                     width={16}
                     height={16}
                     className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   />
                 </a>
-                <AvailabilityToggle />
+                <AvailabilityToggle
+                  onLabel={t.highlight.toggle.on}
+                  offLabel={t.highlight.toggle.off}
+                />
               </div>
             </Reveal>
           </div>
@@ -116,15 +121,11 @@ export function HighlightSection() {
             transition={
               reduced
                 ? undefined
-                : {
-                    duration: 7,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }
+                : { duration: 7, repeat: Infinity, ease: "easeInOut" }
             }
             className="grid grid-cols-2 gap-4 sm:gap-5"
           >
-            {highlight.cards.map((c, i) => (
+            {t.highlight.cards.map((c, i) => (
               <TiltCard
                 key={c.title}
                 title={c.title}
@@ -142,7 +143,13 @@ export function HighlightSection() {
 }
 
 /** Small pill toggle, matching the reference's control next to the CTA. */
-function AvailabilityToggle() {
+function AvailabilityToggle({
+  onLabel,
+  offLabel,
+}: {
+  onLabel: string;
+  offLabel: string;
+}) {
   const [on, setOn] = useState(true);
   const { ease } = motionSpec;
 
@@ -166,7 +173,7 @@ function AvailabilityToggle() {
         />
       </span>
       <span className={on ? "text-ink" : undefined}>
-        {on ? "Open to work" : "Heads-down"}
+        {on ? onLabel : offLabel}
       </span>
     </button>
   );

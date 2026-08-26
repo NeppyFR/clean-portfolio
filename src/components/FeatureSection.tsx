@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { feature } from "@/content";
+import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon, PauseIcon, PlayIcon } from "./Icons";
 
 const isPlaceholder = (s: string) => s.startsWith("{{");
 
 export function FeatureSection() {
+  const feature = useContent().feature;
+
   return (
     <section className="relative bg-paper px-6 pb-28 text-ink sm:px-8 lg:pb-36">
       <div className="mx-auto max-w-7xl">
@@ -39,7 +41,9 @@ function MediaCard() {
   const [playing, setPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduced = useReducedMotion();
-  const { videoSrc, title, caption, href } = feature.media;
+  const media = useContent().feature.media;
+  const { videoSrc, title, caption, href, linkLabel, playLabel, pauseLabel } =
+    media;
 
   useEffect(() => {
     if (reduced) setPlaying(false);
@@ -77,7 +81,7 @@ function MediaCard() {
       <button
         type="button"
         onClick={toggle}
-        aria-label={playing ? "Pause preview" : "Play preview"}
+        aria-label={playing ? pauseLabel : playLabel}
         className="group absolute left-1/2 top-1/2 z-10 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
       >
         <span className="absolute inset-0 rounded-full border border-white/25 transition-transform duration-500 group-hover:scale-110" />
@@ -106,7 +110,7 @@ function MediaCard() {
           rel="noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors duration-300 hover:border-white/35 hover:text-white"
         >
-          Live demo
+          {linkLabel}
           <ArrowUpRightIcon width={15} height={15} />
         </a>
       </div>
@@ -245,7 +249,7 @@ function TrafficPreview({ playing }: { playing: boolean }) {
 /* ── Testimonial ───────────────────────────────────────────── */
 
 function TestimonialCard() {
-  const t = feature.testimonial;
+  const t = useContent().feature.testimonial;
   const pending = isPlaceholder(t.quote);
 
   return (
@@ -259,19 +263,19 @@ function TestimonialCard() {
       {pending ? (
         <>
           <span className="inline-flex w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-medium uppercase tracking-wider text-amber-700">
-            Placeholder
+            {t.badge}
           </span>
           <blockquote className="mt-6 text-lg leading-relaxed text-paper-muted">
-            No testimonial or recommendation was found on singh-angad.ch. Add a
-            real quote in{" "}
+            {t.emptyLead}{" "}
             <code className="rounded bg-black/5 px-1.5 py-0.5 text-[0.85em]">
               src/content.ts
             </code>{" "}
-            under <code className="text-[0.85em]">feature.testimonial</code> and
-            this card renders normally.
+            {t.emptyMid}{" "}
+            <code className="text-[0.85em]">feature.testimonial</code>{" "}
+            {t.emptyTail}
           </blockquote>
           <figcaption className="mt-8 text-sm text-paper-muted">
-            Nothing invented here on purpose.
+            {t.emptyNote}
           </figcaption>
         </>
       ) : (

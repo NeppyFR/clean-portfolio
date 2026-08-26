@@ -1,8 +1,12 @@
-import { projects } from "@/content";
+"use client";
+
+import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon } from "./Icons";
 
 export function ProjectsSection() {
+  const t = useContent();
+
   return (
     <section
       id="projects"
@@ -12,15 +16,15 @@ export function ProjectsSection() {
         <Reveal>
           <div className="flex items-center gap-4">
             <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-              Projects
+              {t.projects.heading}
             </h2>
             <span className="h-px flex-1 bg-paper-border" />
           </div>
         </Reveal>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {projects.map((p, i) => (
-            <Reveal key={p.name} delay={i * 0.1}>
+          {t.projects.items.map((p, i) => (
+            <Reveal key={p.href} delay={i * 0.1}>
               <a
                 href={p.href}
                 target="_blank"
@@ -41,12 +45,12 @@ export function ProjectsSection() {
                   {p.desc}
                 </p>
                 <ul className="mt-7 flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
+                  {p.tags.map((tag) => (
                     <li
-                      key={t}
+                      key={tag}
                       className="rounded-full border border-paper-border px-3 py-1 text-xs text-paper-muted"
                     >
-                      {t}
+                      {tag}
                     </li>
                   ))}
                 </ul>

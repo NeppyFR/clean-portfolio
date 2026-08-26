@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { cta, motionSpec, nav, site } from "@/content";
+import { motionSpec } from "@/content";
+import { useContent } from "@/i18n";
 import { RefreshIcon } from "./Icons";
+import { LanguageToggle } from "./LanguageToggle";
 
 /**
  * Floating capsule nav.
@@ -15,6 +17,7 @@ import { RefreshIcon } from "./Icons";
  * Entrance: drops in from the top 0.2s after the hero headline starts.
  */
 export function Navbar() {
+  const t = useContent();
   const [compact, setCompact] = useState(false);
   const reduced = useReducedMotion();
 
@@ -56,7 +59,7 @@ export function Navbar() {
           paddingBottom: 10,
         }}
         animate={{
-          maxWidth: compact ? 720 : 1280,
+          maxWidth: compact ? 760 : 1280,
           paddingLeft: compact ? 10 : 14,
           paddingRight: compact ? 10 : 14,
           paddingTop: compact ? 8 : 10,
@@ -72,15 +75,15 @@ export function Navbar() {
         {/* Logo */}
         <a
           href="#home"
-          aria-label={`${site.name} — home`}
+          aria-label={t.ui.homeLabel}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent to-accent-deep text-sm font-bold tracking-wide text-white shadow-lg shadow-accent-deep/30"
         >
-          {site.initials}
+          {t.site.initials}
         </a>
 
         {/* Links */}
         <ul className="mx-auto hidden items-center gap-1 md:flex">
-          {nav.map((item) => (
+          {t.nav.map((item) => (
             <li key={item.href}>
               <a
                 href={item.href}
@@ -96,19 +99,20 @@ export function Navbar() {
           ))}
         </ul>
 
-        {/* Mobile spacer keeps the CTA hard right when links are hidden */}
+        {/* Mobile spacer keeps the controls hard right when links are hidden */}
         <span className="mx-auto md:hidden" />
+
+        <LanguageToggle compact={compact} />
 
         {/* CTA */}
         <a
-          href={cta.href}
+          href={t.cta.href}
           className={`group flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-transform duration-300 hover:scale-[1.03] sm:px-5 ${
-            compact
-              ? "bg-ink text-white"
-              : "bg-ink-text text-ink"
+            compact ? "bg-ink text-white" : "bg-ink-text text-ink"
           }`}
         >
-          {cta.label}
+          <span className="hidden sm:inline">{t.cta.label}</span>
+          <span className="sm:hidden">@</span>
           <RefreshIcon
             width={15}
             height={15}

@@ -1,8 +1,13 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
-import { education, languages, skills } from "@/content";
+
+import { skills } from "@/content";
+import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 
 export function SkillsSection() {
+  const t = useContent();
+
   return (
     <section
       id="skills"
@@ -12,7 +17,7 @@ export function SkillsSection() {
         <Reveal>
           <div className="flex items-center gap-4">
             <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-              Skills &amp; Tools
+              {t.skillsSection.heading}
             </h2>
             <span className="h-px flex-1 bg-paper-border" />
           </div>
@@ -47,11 +52,11 @@ export function SkillsSection() {
           <div>
             <Reveal>
               <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-                Languages
+                {t.skillsSection.languagesHeading}
               </h3>
             </Reveal>
             <ul className="mt-5 flex flex-wrap gap-2.5">
-              {languages.map((l, i) => (
+              {t.languages.map((l, i) => (
                 <Reveal as="li" key={l.name} delay={i * 0.05}>
                   <span className="inline-flex items-center gap-2 rounded-full border border-paper-border bg-paper-card px-4 py-2 text-sm">
                     <span aria-hidden="true">{l.flag}</span>
@@ -69,16 +74,16 @@ export function SkillsSection() {
           <div>
             <Reveal>
               <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-                Education
+                {t.skillsSection.educationHeading}
               </h3>
             </Reveal>
             <Reveal delay={0.08}>
               <div className="mt-5 rounded-2xl border border-paper-border bg-paper-card p-6">
                 <h4 className="font-semibold tracking-tight">
-                  {education.title}
+                  {t.education.title}
                 </h4>
                 <p className="mt-2 text-sm leading-relaxed text-paper-muted">
-                  {education.desc}
+                  {t.education.desc}
                 </p>
               </div>
             </Reveal>

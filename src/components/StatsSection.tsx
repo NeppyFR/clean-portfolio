@@ -1,7 +1,11 @@
-import { about } from "@/content";
+"use client";
+
+import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 
 export function StatsSection() {
+  const t = useContent();
+
   return (
     <section
       id="about"
@@ -13,12 +17,12 @@ export function StatsSection() {
           <Reveal>
             <div className="flex items-center gap-4">
               <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-                {about.heading}
+                {t.about.heading}
               </h2>
               <span className="h-px flex-1 bg-paper-border" />
             </div>
           </Reveal>
-          {about.paragraphs.map((p, i) => (
+          {t.about.paragraphs.map((p, i) => (
             <Reveal key={i} delay={0.08 + i * 0.08}>
               <p className="mt-6 text-lg leading-relaxed text-paper-muted">
                 {p}
@@ -29,7 +33,7 @@ export function StatsSection() {
 
         {/* Stats */}
         <ul className="flex flex-col justify-center divide-y divide-paper-border">
-          {about.stats.map((s, i) => (
+          {t.about.stats.map((s, i) => (
             <Reveal as="li" key={s.label} delay={i * 0.1}>
               <div className="flex items-baseline justify-between gap-6 py-7">
                 <span className="text-[clamp(2.75rem,6vw,4.5rem)] font-semibold leading-none tracking-[-0.04em] text-black/15">

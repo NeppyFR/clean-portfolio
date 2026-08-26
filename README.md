@@ -10,6 +10,23 @@ npm run dev      # http://localhost:3000
 npm run build    # production build
 ```
 
+## Languages (EN / DE)
+
+The site ships in English and German, switchable from the navbar pill or the
+footer links. The choice persists in `localStorage`; first-time visitors with a
+German browser locale get German automatically.
+
+`src/content.ts` exports two dictionaries of identical shape, `en` and `de`,
+typed as `de: typeof en` — so **adding a key to `en` and forgetting the German
+one is a compile error**, not a silent English string in a German page.
+Language-invariant data (links, tech names, icons, motion constants) is defined
+once and shared rather than duplicated.
+
+German copy uses **Swiss orthography: `ss`, never `ß`** (`fliessend`,
+`Stadtstrassen`) — correct for a Zurich-based site.
+
+Components read copy via `useContent()` from `src/i18n.tsx`.
+
 ## Where to edit content
 
 **Everything lives in [`src/content.ts`](src/content.ts).** No component needs touching to change copy.
@@ -57,6 +74,23 @@ pixels *opposite* the cursor for depth.
 
 The physics constants (34px spacing, 170px radius, 0.12 lerp, 26px repel) are
 carried over from the existing singh-angad.ch background so the feel matches.
+
+### Scroll-driven hue ramp
+
+Colour is a function of scroll position — violet at the top of the document,
+electric blue at the bottom, interpolated linearly in RGB:
+
+| | top (0%) | bottom (100%) |
+| --- | --- | --- |
+| deep tone (wash, cursor glow) | `#7c3aed` | `#1d4ed8` |
+| light tone (dots, accents) | `#a371f7` | `#22d3ee` |
+
+Scroll progress lives in a **ref**, not state — scrolling writes colour straight
+to the DOM node and never re-renders the tree. The canvas reads the same ref
+inside its existing draw loop rather than starting a second animation loop, so
+the wash, the glow and the dots can't drift out of step. The listener is
+passive, `resize` is handled too (it changes the
+`scrollHeight - innerHeight` denominator), and both are removed on cleanup.
 
 **Shader variant** — a WebGL fbm-noise plane is included behind a flag:
 
