@@ -87,14 +87,17 @@ export function Hero() {
       <CursorBackground />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 pt-32 pb-40 sm:px-8 lg:pt-44">
-        <div className="flex flex-1 flex-col gap-14 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
+        <div className="flex flex-1 flex-col gap-14 lg:flex-row lg:items-start lg:justify-between lg:gap-10 xl:gap-16">
           {/* ── Headline ─────────────────────────────────── */}
           <motion.h1
             variants={container}
             initial="hidden"
             animate="show"
             style={reduced ? undefined : { x: parallaxX, y: parallaxY }}
-            className="max-w-3xl text-balance text-[clamp(2.5rem,7vw,5.25rem)] font-semibold leading-[1.08] tracking-[-0.035em] text-ink-text"
+            // Sized so each line fits on one row in BOTH languages — German
+            // runs ~25% longer, and a wrapped line would turn the 5-step
+            // stagger into 9 visual rows.
+            className="max-w-3xl text-[clamp(2.25rem,4.4vw,3.75rem)] font-semibold leading-[1.1] tracking-[-0.035em] text-ink-text"
           >
             {t.heroLines.map((text, i) => (
               <motion.span
@@ -124,7 +127,7 @@ export function Hero() {
                 ? { duration: 0.35, delay: 0.1 }
                 : { duration: 0.8, ease, delay: motionSpec.statusCardDelay }
             }
-            className="w-full max-w-sm shrink-0 rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-md lg:mt-4"
+            className="w-full max-w-sm shrink-0 rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur-md lg:mt-4 lg:max-w-xs xl:max-w-sm"
           >
             <div className="flex items-center gap-2.5">
               <span className="relative flex h-2 w-2">

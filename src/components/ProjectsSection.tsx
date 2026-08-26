@@ -24,7 +24,7 @@ export function ProjectsSection() {
 
         <div className="mt-10 grid gap-5 md:grid-cols-2">
           {t.projects.items.map((p, i) => (
-            <Reveal key={p.href} delay={i * 0.1}>
+            <Reveal key={p.href} index={i}>
               <a
                 href={p.href}
                 target="_blank"

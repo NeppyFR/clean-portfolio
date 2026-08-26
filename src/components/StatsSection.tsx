@@ -23,7 +23,7 @@ export function StatsSection() {
             </div>
           </Reveal>
           {t.about.paragraphs.map((p, i) => (
-            <Reveal key={i} delay={0.08 + i * 0.08}>
+            <Reveal key={i} index={i + 1}>
               <p className="mt-6 text-lg leading-relaxed text-paper-muted">
                 {p}
               </p>
@@ -34,7 +34,7 @@ export function StatsSection() {
         {/* Stats */}
         <ul className="flex flex-col justify-center divide-y divide-paper-border">
           {t.about.stats.map((s, i) => (
-            <Reveal as="li" key={s.label} delay={i * 0.1}>
+            <Reveal as="li" key={s.label} index={i}>
               <div className="flex items-baseline justify-between gap-6 py-7">
                 <span className="text-[clamp(2.75rem,6vw,4.5rem)] font-semibold leading-none tracking-[-0.04em] text-black/15">
                   {s.value}

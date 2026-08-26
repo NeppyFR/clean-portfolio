@@ -39,7 +39,7 @@ function TiltCard({
   const Wrapper = href ? "a" : "div";
 
   return (
-    <Reveal delay={index * 0.09}>
+    <Reveal index={index}>
       <motion.div
         ref={ref}
         onPointerMove={onMove}
@@ -89,12 +89,12 @@ export function HighlightSection() {
                 {t.highlight.heading}
               </h2>
             </Reveal>
-            <Reveal delay={0.1}>
+            <Reveal index={1}>
               <p className="mt-6 max-w-md text-lg leading-relaxed text-paper-muted">
                 {t.highlight.sub}
               </p>
             </Reveal>
-            <Reveal delay={0.18}>
+            <Reveal index={2}>
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <a
                   href={t.highlight.button.href}

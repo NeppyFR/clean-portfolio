@@ -136,14 +136,13 @@ src/
 
 Search for `{{PLACEHOLDER` in `src/content.ts`:
 
-1. **LinkedIn URL** — not listed on singh-angad.ch. The icon renders disabled until set.
+1. ~~**LinkedIn URL**~~ — resolved: linked from the hero and footer icons.
 2. **Testimonial** — no recommendation exists on the site. The card currently renders
    an explicit "Placeholder" state rather than invented praise. Fill in
    `feature.testimonial` and it renders normally.
-3. **Contact email** — deliberately not published. The `Let's talk` CTA scrolls to
-   the contact footer instead, and the email icon renders disabled. Set
-   `socials[1].href` to `mailto:your@address` (and optionally `cta.href`) when you've
-   decided which address should be public.
+3. ~~**Contact email**~~ — resolved: `contact@singh-angad.ch`, set once via the
+   `EMAIL` constant in `src/content.ts` and used by the email icon and both
+   CTA buttons.
 4. **Featured project video** — `feature.media.videoSrc` is `null`, so a live canvas
    stand-in of the Traffic Mesh simulation is rendered instead. Drop an `.mp4` in
    `/public` and point `videoSrc` at it to use real footage.

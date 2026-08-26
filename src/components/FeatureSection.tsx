@@ -26,7 +26,7 @@ export function FeatureSection() {
           <Reveal>
             <MediaCard />
           </Reveal>
-          <Reveal delay={0.12}>
+          <Reveal index={1}>
             <TestimonialCard />
           </Reveal>
         </div>

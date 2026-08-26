@@ -25,7 +25,7 @@ export function SkillsSection() {
 
         <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {skills.map((s, i) => (
-            <Reveal as="li" key={s.name} delay={(i % 6) * 0.05}>
+            <Reveal as="li" key={s.name} index={i % 6}>
               <div className="flex h-full items-center gap-3 rounded-2xl border border-paper-border bg-paper-card px-4 py-3.5 transition-transform duration-300 hover:-translate-y-0.5">
                 {s.icon ? (
                   <img
@@ -57,7 +57,7 @@ export function SkillsSection() {
             </Reveal>
             <ul className="mt-5 flex flex-wrap gap-2.5">
               {t.languages.map((l, i) => (
-                <Reveal as="li" key={l.name} delay={i * 0.05}>
+                <Reveal as="li" key={l.name} index={i}>
                   <span className="inline-flex items-center gap-2 rounded-full border border-paper-border bg-paper-card px-4 py-2 text-sm">
                     <span aria-hidden="true">{l.flag}</span>
                     <span className="font-medium">{l.name}</span>
@@ -77,7 +77,7 @@ export function SkillsSection() {
                 {t.skillsSection.educationHeading}
               </h3>
             </Reveal>
-            <Reveal delay={0.08}>
+            <Reveal index={1}>
               <div className="mt-5 rounded-2xl border border-paper-border bg-paper-card p-6">
                 <h4 className="font-semibold tracking-tight">
                   {t.education.title}

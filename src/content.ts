@@ -28,12 +28,17 @@ export const LANG_LABELS: Record<Lang, { short: string; full: string }> = {
 
 export type IconName = "github" | "linkedin" | "mail";
 
+/** Public contact address — used by the email icon and both CTA buttons. */
+export const EMAIL = "contact@singh-angad.ch";
+
 export const socials: { label: string; href: string; icon: IconName }[] = [
   { label: "GitHub", href: "https://github.com/neppyfr", icon: "github" },
-  // {{PLACEHOLDER}} — set to "mailto:your@address" to enable the email icon
-  { label: "Email", href: "{{PLACEHOLDER_EMAIL}}", icon: "mail" },
-  // {{PLACEHOLDER}} — LinkedIn URL not listed on singh-angad.ch
-  { label: "LinkedIn", href: "{{PLACEHOLDER_LINKEDIN}}", icon: "linkedin" },
+  { label: "Email", href: `mailto:${EMAIL}`, icon: "mail" },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/angad-singh-3148b5347/",
+    icon: "linkedin",
+  },
 ];
 
 const devicon = (slug: string, variant = "original") =>
@@ -73,6 +78,24 @@ export const motionSpec = {
   statusCardDelay: 0.75,
   wordmarkDelay: 1.05,
   wordmarkDuration: 1.2,
+
+  /** Scroll-reveal tuning — consumed by Reveal.tsx. */
+  reveal: {
+    duration: 0.75,
+    /** starting offset in px; larger = more visible travel */
+    y: 44,
+    /** fraction of the element that must be in view before firing */
+    amount: 0.2,
+    /**
+     * Shrinks the detection box from the bottom, so an element must travel
+     * further up the screen before it counts as visible. This is what makes
+     * reveals fire *later* — without it they complete off-screen and you
+     * never see them.
+     */
+    margin: "0px 0px -22% 0px",
+    /** offset between adjacent items, giving the cascade */
+    stagger: 0.14,
+  },
 };
 
 /* ── ENGLISH ─────────────────────────────────────────────── */
@@ -111,9 +134,7 @@ const en = {
 
   cta: {
     label: "Let's talk",
-    // Scrolls to the contact footer. Swap for "mailto:you@example.com"
-    // once you've decided which address should be public.
-    href: "#contact",
+    href: `mailto:${EMAIL}`,
   },
 
   highlight: {
@@ -239,17 +260,20 @@ const de: typeof en = {
     wordmark: "ANGAD",
   },
 
+  // Kept to roughly the same line lengths as the English version — German
+  // runs ~25% longer, so the lines are trimmed to stop them wrapping and
+  // turning the 5-line stagger into 9 visual rows.
   heroLines: [
-    "Ich entwickle",
-    "durchdachte Applikationen,",
-    "die echte Probleme lösen",
+    "Ich baue",
+    "durchdachte Software,",
+    "die echte Probleme löst",
     "und sich mühelos",
-    "bedienen lassen.",
+    "bedienen lässt.",
   ],
 
   heroStatus: {
     label: "Aktuell",
-    text: "Ich baue Nebenprojekte und lerne öffentlich dazu — in der Ausbildung zum Applikationsentwickler bei Zürich.",
+    text: "Nebenprojekte bauen, öffentlich dazulernen — in Ausbildung zum Applikationsentwickler bei Zürich.",
   },
 
   nav: [
@@ -262,7 +286,7 @@ const de: typeof en = {
 
   cta: {
     label: "Kontakt aufnehmen",
-    href: "#contact",
+    href: `mailto:${EMAIL}`,
   },
 
   highlight: {
