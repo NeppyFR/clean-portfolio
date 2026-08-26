@@ -87,7 +87,8 @@ export function Navbar() {
             <li key={item.href}>
               <a
                 href={item.href}
-                className={`rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+                // nowrap: German labels like "Über mich" wrap onto two lines otherwise
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
                   compact
                     ? "text-ink/70 hover:bg-ink/5 hover:text-ink"
                     : "text-ink-text/70 hover:bg-white/10 hover:text-ink-text"
