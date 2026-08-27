@@ -59,7 +59,7 @@ export function Navbar() {
           paddingBottom: 10,
         }}
         animate={{
-          maxWidth: compact ? 760 : 1280,
+          maxWidth: compact ? 840 : 1280,
           paddingLeft: compact ? 10 : 14,
           paddingRight: compact ? 10 : 14,
           paddingTop: compact ? 8 : 10,
@@ -88,7 +88,7 @@ export function Navbar() {
               <a
                 href={item.href}
                 // nowrap: German labels like "Über mich" wrap onto two lines otherwise
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+                className={`whitespace-nowrap rounded-full px-3 py-2 text-sm transition-colors duration-300 lg:px-4 ${
                   compact
                     ? "text-ink/70 hover:bg-ink/5 hover:text-ink"
                     : "text-ink-text/70 hover:bg-white/10 hover:text-ink-text"

@@ -295,7 +295,10 @@ const de: typeof en = {
   ],
 
   cta: {
-    label: "Kontakt aufnehmen",
+    // Short on purpose: the compact navbar pill has to fit five German nav
+    // labels, the language switch and this button. "Kontakt aufnehmen"
+    // overflowed.
+    label: "Schreib mir",
     href: `mailto:${EMAIL}`,
   },
 
