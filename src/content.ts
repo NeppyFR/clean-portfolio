@@ -44,20 +44,53 @@ export const socials: { label: string; href: string; icon: IconName }[] = [
 const devicon = (slug: string, variant = "original") =>
   `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-${variant}.svg`;
 
-/** Tech names are proper nouns — identical in both languages. */
-export const skills = [
-  { name: "PostgreSQL", icon: devicon("postgresql") },
-  { name: "NoSQL", icon: null },
-  { name: "Docker", icon: devicon("docker") },
-  { name: "Vite", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg" },
-  { name: "C++", icon: devicon("cplusplus") },
-  { name: "C#", icon: devicon("csharp") },
-  { name: "Java", icon: devicon("java") },
-  { name: "JavaScript", icon: devicon("javascript") },
-  { name: "React", icon: devicon("react") },
-  { name: "HTML", icon: devicon("html5") },
-  { name: "CSS", icon: devicon("css3") },
-  { name: "Access", icon: null },
+export type SkillGroupKey = "programming" | "web" | "databases" | "tools";
+
+/**
+ * Tech names are proper nouns — identical in both languages, so they live
+ * out here. The group *labels* are not, and are translated under
+ * `skillsSection.groups`.
+ *
+ * Grouping and membership follow the CV exactly. The 12 entries here are
+ * what the "12 technologies" stat counts — keep them in step.
+ */
+export const skillGroups: {
+  key: SkillGroupKey;
+  items: { name: string; icon: string | null }[];
+}[] = [
+  {
+    key: "programming",
+    items: [
+      { name: "C++", icon: devicon("cplusplus") },
+      { name: "C#", icon: devicon("csharp") },
+      { name: "Java", icon: devicon("java") },
+      { name: "JavaScript", icon: devicon("javascript") },
+    ],
+  },
+  {
+    key: "web",
+    items: [
+      { name: "HTML", icon: devicon("html5") },
+      { name: "CSS", icon: devicon("css3") },
+      { name: "React", icon: devicon("react") },
+      {
+        name: "Vite",
+        icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg",
+      },
+    ],
+  },
+  {
+    key: "databases",
+    items: [
+      { name: "PostgreSQL", icon: devicon("postgresql") },
+      { name: "NoSQL", icon: null },
+      { name: "Access", icon: null },
+    ],
+  },
+  {
+    key: "tools",
+    items: [{ name: "Docker", icon: devicon("docker") }],
+  },
 ];
 
 const PROJECT_LINKS = {
@@ -104,8 +137,10 @@ const en = {
   site: {
     name: "Angad Singh",
     initials: "AS",
-    role: "Application Developer",
-    location: "near Zurich, Switzerland",
+    // "in training" rather than the bare title: the CV says "angehender
+    // Applikationsentwickler EFZ", and the EFZ isn't earned until 2029.
+    role: "Application Developer in training",
+    location: "in Adliswil, near Zurich",
     /** Oversized faint wordmark across the bottom of the hero */
     wordmark: "ANGAD",
   },
@@ -121,7 +156,7 @@ const en = {
 
   heroStatus: {
     label: "Currently",
-    text: "Building side projects & learning in public — training as an application developer near Zurich.",
+    text: "Training as an application developer near Zurich — and looking for an internship placement for Summer 2027 to Summer 2029.",
   },
 
   nav: [
@@ -147,7 +182,7 @@ const en = {
       { title: "PostgreSQL", meta: "SQL & NoSQL" },
       { title: "Learn more", meta: "Full stack", isCta: true, href: "#skills" },
     ],
-    toggle: { on: "Open to work", off: "Heads-down" },
+    toggle: { on: "Seeking an internship", off: "Heads-down" },
   },
 
   feature: {
@@ -187,9 +222,9 @@ const en = {
   about: {
     heading: "About",
     paragraphs: [
-      "Zurich-based developer, currently studying to become an application developer. I enjoy building things across the stack — from databases to interfaces — and I'm always picking up new tools and languages along the way.",
+      "Application-development student near Zurich, with an appetite for the whole breadth of software — from the database through to the interface. I pick up new languages and tools as I go, and I like turning ideas into projects of my own.",
       "My training is hands-on: I learn a tool by shipping something real with it. That's where Grade Tracker and Traffic Mesh came from — small products built end to end, from the data model out to the interface.",
-      "I speak German and English fluently, plus Panjabi, Urdu and Hindi, and enough French to get by.",
+      "I speak German and English fluently, Panjabi as a mother tongue, good Hindi and Urdu, and enough French to get by.",
     ],
     stats: [
       { value: "2+", label: "Projects shipped" },
@@ -229,27 +264,76 @@ const en = {
   skillsSection: {
     heading: "Skills & Tools",
     languagesHeading: "Languages",
-    educationHeading: "Education",
+    /** Labels for `skillGroups` — keyed by `SkillGroupKey`. */
+    groups: {
+      programming: "Programming languages",
+      web: "Web",
+      databases: "Databases",
+      tools: "Tools",
+    },
   },
 
   languages: [
     { flag: "🇩🇪", name: "German", tag: "fluent" },
     { flag: "🇬🇧", name: "English", tag: "fluent" },
-    { flag: "🇮🇳", name: "Panjabi", tag: null as string | null },
-    { flag: "🇵🇰", name: "Urdu", tag: null as string | null },
-    { flag: "🇮🇳", name: "Hindi", tag: null as string | null },
+    { flag: "🇮🇳", name: "Panjabi", tag: "mother tongue" },
+    { flag: "🇮🇳", name: "Hindi", tag: "good" },
+    { flag: "🇵🇰", name: "Urdu", tag: "good" },
     { flag: "🇫🇷", name: "French", tag: "basics" },
   ],
 
-  education: {
-    title: "Application Development — In Progress",
-    desc: "Training to become an application developer near Zurich, Switzerland.",
+  /** CV timeline. `period` is rendered in a right-aligned column, so keep it
+   *  short enough to sit on one line next to the title in both languages. */
+  resume: {
+    heading: "Résumé",
+    educationHeading: "Education",
+    experienceHeading: "Experience",
+    seeking: {
+      label: "Looking for",
+      text: "An internship placement for the practical half of my apprenticeship, from Summer 2027 to Summer 2029.",
+    },
+    education: [
+      {
+        title: "Application Developer EFZ (in training)",
+        org: "Benedict-Schule, Zürich",
+        period: "Summer 2025 – Summer 2029",
+        bullets: [
+          "School-based foundation in software development — programming, databases and web.",
+          "The practical half runs in a company: an internship from Summer 2027 to Summer 2029.",
+        ],
+      },
+      {
+        title: "Informatikmittelschule (IMS)",
+        org: "IMS Sargans",
+        period: "2024 – 2025",
+        bullets: [
+          "IT-focused secondary education on the vocational baccalaureate track.",
+        ],
+      },
+      {
+        title: "Secondary school",
+        org: "Adliswil",
+        period: "until 2024",
+        bullets: ["Completed compulsory education."],
+      },
+    ],
+    experience: [
+      {
+        title: "Web development assistant",
+        org: "Free Mind Tech AG",
+        period: "2025 · short assignment",
+        bullets: [
+          "Helped build and maintain websites over a few weeks.",
+          "A first look inside a professional development environment.",
+        ],
+      },
+    ],
   },
 
   footer: {
     heading: "Let's build something.",
-    sub: "Application Developer based near Zurich, Switzerland. Open to interesting problems and good collaborators.",
-    builtIn: "Built near Zurich",
+    sub: "Application developer in training, based in Adliswil near Zurich. Looking for an internship placement for Summer 2027 to Summer 2029, and open to interesting problems.",
+    builtIn: "Built in Adliswil",
     navLabel: "Footer",
   },
 
@@ -265,8 +349,8 @@ const de: typeof en = {
   site: {
     name: "Angad Singh",
     initials: "AS",
-    role: "Applikationsentwickler",
-    location: "bei Zürich, Schweiz",
+    role: "Applikationsentwickler EFZ in Ausbildung",
+    location: "in Adliswil bei Zürich",
     wordmark: "ANGAD",
   },
 
@@ -283,7 +367,7 @@ const de: typeof en = {
 
   heroStatus: {
     label: "Aktuell",
-    text: "Nebenprojekte bauen, öffentlich dazulernen — in Ausbildung zum Applikationsentwickler bei Zürich.",
+    text: "In Ausbildung zum Applikationsentwickler bei Zürich — und auf der Suche nach einem Praktikumsplatz für Sommer 2027 bis Sommer 2029.",
   },
 
   nav: [
@@ -312,7 +396,7 @@ const de: typeof en = {
       { title: "PostgreSQL", meta: "SQL & NoSQL" },
       { title: "Mehr erfahren", meta: "Full Stack", isCta: true, href: "#skills" },
     ],
-    toggle: { on: "Offen für Angebote", off: "Im Fokus" },
+    toggle: { on: "Praktikum gesucht", off: "Im Fokus" },
   },
 
   feature: {
@@ -345,9 +429,9 @@ const de: typeof en = {
   about: {
     heading: "Über mich",
     paragraphs: [
-      "Entwickler aus der Region Zürich, aktuell in der Ausbildung zum Applikationsentwickler. Ich baue gerne über den ganzen Stack hinweg — von der Datenbank bis zum Interface — und eigne mir laufend neue Tools und Sprachen an.",
+      "Lernender in der Applikationsentwicklung bei Zürich, mit Freude an der gesamten Bandbreite der Softwareentwicklung — von der Datenbank bis zur Benutzeroberfläche. Ich eigne mir laufend neue Sprachen und Werkzeuge an und setze Ideen gerne in eigenen Projekten um.",
       "Meine Ausbildung ist praxisnah: Ein Tool lerne ich, indem ich etwas Echtes damit baue. Genau so sind Grade Tracker und Traffic Mesh entstanden — kleine Produkte, von Grund auf gebaut, vom Datenmodell bis zur Oberfläche.",
-      "Ich spreche fliessend Deutsch und Englisch, dazu Panjabi, Urdu und Hindi — und genug Französisch, um durchzukommen.",
+      "Ich spreche fliessend Deutsch und Englisch, Panjabi als Muttersprache, gut Hindi und Urdu — und genug Französisch, um durchzukommen.",
     ],
     stats: [
       { value: "2+", label: "Projekte umgesetzt" },
@@ -386,27 +470,73 @@ const de: typeof en = {
   skillsSection: {
     heading: "Skills & Tools",
     languagesHeading: "Sprachen",
-    educationHeading: "Ausbildung",
+    groups: {
+      programming: "Programmiersprachen",
+      web: "Web",
+      databases: "Datenbanken",
+      tools: "Werkzeuge",
+    },
   },
 
   languages: [
     { flag: "🇩🇪", name: "Deutsch", tag: "fliessend" },
     { flag: "🇬🇧", name: "Englisch", tag: "fliessend" },
-    { flag: "🇮🇳", name: "Panjabi", tag: null },
-    { flag: "🇵🇰", name: "Urdu", tag: null },
-    { flag: "🇮🇳", name: "Hindi", tag: null },
+    { flag: "🇮🇳", name: "Panjabi", tag: "Muttersprache" },
+    { flag: "🇮🇳", name: "Hindi", tag: "gut" },
+    { flag: "🇵🇰", name: "Urdu", tag: "gut" },
     { flag: "🇫🇷", name: "Französisch", tag: "Grundkenntnisse" },
   ],
 
-  education: {
-    title: "Applikationsentwicklung — laufend",
-    desc: "Ausbildung zum Applikationsentwickler bei Zürich, Schweiz.",
+  resume: {
+    heading: "Lebenslauf",
+    educationHeading: "Ausbildung",
+    experienceHeading: "Praktische Erfahrung",
+    seeking: {
+      label: "Gesucht",
+      text: "Ein Praktikumsplatz für den praktischen Teil meiner Ausbildung, von Sommer 2027 bis Sommer 2029.",
+    },
+    education: [
+      {
+        title: "Applikationsentwickler EFZ (in Ausbildung)",
+        org: "Benedict-Schule, Zürich",
+        period: "Sommer 2025 – Sommer 2029",
+        bullets: [
+          "Schulisch organisierte Grundbildung in Softwareentwicklung — Programmierung, Datenbanken und Web.",
+          "Der praktische Teil findet im Betrieb statt: ein Praktikum von Sommer 2027 bis Sommer 2029.",
+        ],
+      },
+      {
+        title: "Informatikmittelschule (IMS)",
+        org: "IMS Sargans",
+        period: "2024 – 2025",
+        bullets: [
+          "Informatik- und berufsmaturitätsorientierte Ausbildung.",
+        ],
+      },
+      {
+        title: "Sekundarschule",
+        org: "Adliswil",
+        period: "bis 2024",
+        bullets: ["Abschluss der obligatorischen Schulzeit."],
+      },
+    ],
+    experience: [
+      {
+        title: "Aushilfe Webentwicklung",
+        org: "Free Mind Tech AG",
+        period: "2025 · Kurzeinsatz",
+        bullets: [
+          "Während einiger Wochen bei der Erstellung und Pflege von Websites mitgeholfen.",
+          "Erster Einblick in ein professionelles Entwicklungsumfeld.",
+        ],
+      },
+    ],
   },
 
   footer: {
     heading: "Bauen wir etwas zusammen.",
-    sub: "Applikationsentwickler mit Sitz bei Zürich, Schweiz. Offen für spannende Probleme und gute Zusammenarbeit.",
-    builtIn: "Gebaut bei Zürich",
+    sub: "Applikationsentwickler EFZ in Ausbildung, mit Sitz in Adliswil bei Zürich. Auf der Suche nach einem Praktikumsplatz für Sommer 2027 bis Sommer 2029 und offen für spannende Probleme.",
+    builtIn: "Gebaut in Adliswil",
     navLabel: "Fusszeile",
   },
 

@@ -41,11 +41,15 @@ Components read copy via `useContent()` from `src/i18n.tsx`.
 | `highlight` | Light section heading, button, and the four floating stack cards |
 | `feature` | Two-tone heading, media card, testimonial |
 | `about` | Bio paragraphs and the big stat numbers |
-| `projects`, `skills`, `languages`, `education` | Pulled from singh-angad.ch |
+| `projects`, `languages` | Projects and spoken languages |
+| `resume` | CV timeline — education, experience, and the internship ask |
+| `skillGroups` | Tech stack, grouped as on the CV (programming / web / databases / tools) |
 | `motionSpec` | All hero entrance timing (see below) |
 
-Content was extracted from the live site's JS bundle, so the bio, skills, languages,
-projects, and education text are verbatim from https://singh-angad.ch.
+The bio, projects and palette were extracted from the live site's JS bundle at
+https://singh-angad.ch. The `resume` timeline, the grouped `skillGroups`, the
+language levels and the internship copy come from the CV
+(`Lebenslauf_Angad_Singh.pdf`) and supersede the thinner site copy.
 
 ## Hero entrance timing
 
@@ -150,6 +154,7 @@ src/
     FeatureSection.tsx       two-tone heading, media card, testimonial
     ProjectsSection.tsx
     StatsSection.tsx
+    ResumeSection.tsx        CV timeline (education + experience)
     SkillsSection.tsx
     Footer.tsx
     Reveal.tsx               scroll reveal (0.6s, fires at 20% in view)

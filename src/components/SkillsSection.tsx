@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import { skills } from "@/content";
+import { skillGroups } from "@/content";
 import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 
@@ -23,71 +23,65 @@ export function SkillsSection() {
           </div>
         </Reveal>
 
-        <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {skills.map((s, i) => (
-            <Reveal as="li" key={s.name} index={i % 6}>
-              <div className="flex h-full items-center gap-3 rounded-2xl border border-paper-border bg-paper-card px-4 py-3.5 transition-transform duration-300 hover:-translate-y-0.5">
-                {s.icon ? (
-                  <img
-                    src={s.icon}
-                    alt=""
-                    width={26}
-                    height={26}
-                    loading="lazy"
-                    className="h-[26px] w-[26px] shrink-0"
-                  />
-                ) : (
-                  <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-md bg-gradient-to-br from-accent to-accent-deep text-[11px] font-bold text-white">
-                    {s.name.slice(0, 2)}
-                  </span>
-                )}
-                <span className="text-sm font-medium">{s.name}</span>
-              </div>
-            </Reveal>
+        {/* Grouped as on the CV. Chips wrap rather than sitting in a fixed
+            grid, because the groups are uneven (4 / 4 / 3 / 1). */}
+        <div className="mt-10 space-y-9">
+          {skillGroups.map((group) => (
+            <div key={group.key}>
+              <Reveal>
+                <h3 className="text-xs font-medium uppercase tracking-[0.16em] text-paper-muted">
+                  {t.skillsSection.groups[group.key]}
+                </h3>
+              </Reveal>
+
+              <ul className="mt-4 flex flex-wrap gap-3">
+                {group.items.map((s, i) => (
+                  // index starts at 1 so the chips cascade in after their
+                  // group label.
+                  <Reveal as="li" key={s.name} index={i + 1}>
+                    <div className="flex h-full items-center gap-3 rounded-2xl border border-paper-border bg-paper-card px-4 py-3.5 transition-transform duration-300 hover:-translate-y-0.5">
+                      {s.icon ? (
+                        <img
+                          src={s.icon}
+                          alt=""
+                          width={26}
+                          height={26}
+                          loading="lazy"
+                          className="h-[26px] w-[26px] shrink-0"
+                        />
+                      ) : (
+                        <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-md bg-gradient-to-br from-accent to-accent-deep text-[11px] font-bold text-white">
+                          {s.name.slice(0, 2)}
+                        </span>
+                      )}
+                      <span className="text-sm font-medium">{s.name}</span>
+                    </div>
+                  </Reveal>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
 
-        <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-16">
-          {/* Languages */}
-          <div>
-            <Reveal>
-              <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-                {t.skillsSection.languagesHeading}
-              </h3>
-            </Reveal>
-            <ul className="mt-5 flex flex-wrap gap-2.5">
-              {t.languages.map((l, i) => (
-                <Reveal as="li" key={l.name} index={i}>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-paper-border bg-paper-card px-4 py-2 text-sm">
-                    <span aria-hidden="true">{l.flag}</span>
-                    <span className="font-medium">{l.name}</span>
-                    {l.tag && (
-                      <span className="text-xs text-paper-muted">{l.tag}</span>
-                    )}
-                  </span>
-                </Reveal>
-              ))}
-            </ul>
-          </div>
-
-          {/* Education */}
-          <div>
-            <Reveal>
-              <h3 className="text-xs font-medium uppercase tracking-[0.2em] text-paper-muted">
-                {t.skillsSection.educationHeading}
-              </h3>
-            </Reveal>
-            <Reveal index={1}>
-              <div className="mt-5 rounded-2xl border border-paper-border bg-paper-card p-6">
-                <h4 className="font-semibold tracking-tight">
-                  {t.education.title}
-                </h4>
-                <p className="mt-2 text-sm leading-relaxed text-paper-muted">
-                  {t.education.desc}
-                </p>
-              </div>
-            </Reveal>
-          </div>
+        {/* Education used to sit beside this; it now has its own timeline in
+            ResumeSection, so languages get the full width. */}
+        <div className="mt-16">
+          <Reveal>
+            <h3 className="text-xs font-medium uppercase tracking-[0.16em] text-paper-muted">
+              {t.skillsSection.languagesHeading}
+            </h3>
+          </Reveal>
+          <ul className="mt-5 flex flex-wrap gap-2.5">
+            {t.languages.map((l, i) => (
+              <Reveal as="li" key={l.name} index={i + 1}>
+                <span className="inline-flex items-center gap-2 rounded-full border border-paper-border bg-paper-card px-4 py-2 text-sm">
+                  <span aria-hidden="true">{l.flag}</span>
+                  <span className="font-medium">{l.name}</span>
+                  <span className="text-xs text-paper-muted">{l.tag}</span>
+                </span>
+              </Reveal>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

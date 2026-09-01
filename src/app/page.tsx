@@ -5,6 +5,7 @@ import { FeatureSection } from "@/components/FeatureSection";
 import { MarketCard } from "@/components/MarketCard";
 import { ProjectsSection } from "@/components/ProjectsSection";
 import { StatsSection } from "@/components/StatsSection";
+import { ResumeSection } from "@/components/ResumeSection";
 import { SkillsSection } from "@/components/SkillsSection";
 import { Footer } from "@/components/Footer";
 
@@ -21,6 +22,7 @@ export default function Page() {
         <FeatureSection sideCard={<MarketCard />} />
         <ProjectsSection />
         <StatsSection />
+        <ResumeSection />
         <SkillsSection />
       </main>
       <Footer />
