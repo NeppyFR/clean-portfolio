@@ -24,7 +24,7 @@ export function SkillsSection() {
         </Reveal>
 
         {/* Grouped as on the CV. Chips wrap rather than sitting in a fixed
-            grid, because the groups are uneven (4 / 4 / 3 / 1). */}
+            grid, because the groups are uneven (5 / 4 / 3 / 3). */}
         <div className="mt-10 space-y-9">
           {skillGroups.map((group) => (
             <div key={group.key}>

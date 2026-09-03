@@ -51,8 +51,9 @@ export type SkillGroupKey = "programming" | "web" | "databases" | "tools";
  * out here. The group *labels* are not, and are translated under
  * `skillsSection.groups`.
  *
- * Grouping and membership follow the CV exactly. The 12 entries here are
- * what the "12 technologies" stat counts — keep them in step.
+ * Grouping follows the CV. The 15 entries here are what the "15 technologies"
+ * stat counts — keep them in step. PHP, Git and GitHub are not on the CV;
+ * they were added later.
  */
 export const skillGroups: {
   key: SkillGroupKey;
@@ -65,6 +66,7 @@ export const skillGroups: {
       { name: "C#", icon: devicon("csharp") },
       { name: "Java", icon: devicon("java") },
       { name: "JavaScript", icon: devicon("javascript") },
+      { name: "PHP", icon: devicon("php") },
     ],
   },
   {
@@ -89,7 +91,11 @@ export const skillGroups: {
   },
   {
     key: "tools",
-    items: [{ name: "Docker", icon: devicon("docker") }],
+    items: [
+      { name: "Git", icon: devicon("git") },
+      { name: "GitHub", icon: devicon("github") },
+      { name: "Docker", icon: devicon("docker") },
+    ],
   },
 ];
 
@@ -228,7 +234,7 @@ const en = {
     ],
     stats: [
       { value: "2+", label: "Projects shipped" },
-      { value: "12", label: "Technologies" },
+      { value: "15", label: "Technologies" },
       { value: "6", label: "Languages spoken" },
     ],
   },
@@ -435,7 +441,7 @@ const de: typeof en = {
     ],
     stats: [
       { value: "2+", label: "Projekte umgesetzt" },
-      { value: "12", label: "Technologien" },
+      { value: "15", label: "Technologien" },
       { value: "6", label: "Sprachen" },
     ],
   },
