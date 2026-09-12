@@ -31,6 +31,26 @@ export type IconName = "github" | "linkedin" | "mail";
 /** Public contact address — used by the email icon and both CTA buttons. */
 export const EMAIL = "contact@singh-angad.ch";
 
+/**
+ * Portrait shown at the top of the About section.
+ *
+ * Drop an image in `/public` and point this at it. Roughly 4/5 (portrait)
+ * suits the box best; see `Portrait` in `StatsSection.tsx`. Set it back to
+ * null and a placeholder avatar of the same shape renders instead, so the
+ * layout does not shift either way.
+ *
+ * Keep the file small — it is served through next/image, which never requests
+ * wider than 384px for this box, so anything past ~800px is repo weight for
+ * nothing. This one is 800x916 at 86KB; the 1.6MB PNG it replaced looked
+ * identical on screen.
+ *
+ * Defined out here rather than inside `en`/`de` because an asset path is
+ * language-invariant — duplicating it in both dictionaries would just give
+ * it two places to drift. The alt text *is* translated, under
+ * `about.portraitAlt`.
+ */
+export const PORTRAIT_SRC: string | null = "/angad.jpg";
+
 export const socials: { label: string; href: string; icon: IconName }[] = [
   { label: "GitHub", href: "https://github.com/neppyfr", icon: "github" },
   { label: "Email", href: `mailto:${EMAIL}`, icon: "mail" },
@@ -227,6 +247,10 @@ const en = {
 
   about: {
     heading: "About",
+    /** Alt text for `PORTRAIT_SRC`. Only used once a real photo is set —
+     *  the placeholder is decorative and is hidden from assistive tech. */
+    portraitAlt: "Angad Singh",
+    portraitPlaceholder: "Photo coming soon",
     paragraphs: [
       "Application-development student near Zurich, with an appetite for the whole breadth of software — from the database through to the interface. I pick up new languages and tools as I go, and I like turning ideas into projects of my own.",
       "My training is hands-on: I learn a tool by shipping something real with it. That's where Grade Tracker and Traffic Mesh came from — small products built end to end, from the data model out to the interface.",
@@ -434,6 +458,8 @@ const de: typeof en = {
 
   about: {
     heading: "Über mich",
+    portraitAlt: "Angad Singh",
+    portraitPlaceholder: "Foto folgt",
     paragraphs: [
       "Lernender in der Applikationsentwicklung bei Zürich, mit Freude an der gesamten Bandbreite der Softwareentwicklung — von der Datenbank bis zur Benutzeroberfläche. Ich eigne mir laufend neue Sprachen und Werkzeuge an und setze Ideen gerne in eigenen Projekten um.",
       "Meine Ausbildung ist praxisnah: Ein Tool lerne ich, indem ich etwas Echtes damit baue. Genau so sind Grade Tracker und Traffic Mesh entstanden — kleine Produkte, von Grund auf gebaut, vom Datenmodell bis zur Oberfläche.",

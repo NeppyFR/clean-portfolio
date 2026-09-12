@@ -71,6 +71,19 @@ export function PauseIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/**
+ * Generic person glyph, used as the stand-in while `PORTRAIT_SRC` is null.
+ * Deliberately plain — it should read as "no photo yet", not as a character.
+ */
+export function AvatarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props} strokeWidth={1.4}>
+      <circle cx="12" cy="8.5" r="3.75" />
+      <path d="M4.5 20.25a7.5 7.5 0 0 1 15 0" />
+    </svg>
+  );
+}
+
 export const iconMap = {
   github: GithubIcon,
   linkedin: LinkedinIcon,
