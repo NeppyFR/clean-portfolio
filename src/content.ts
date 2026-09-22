@@ -71,9 +71,13 @@ export type SkillGroupKey = "programming" | "web" | "databases" | "tools";
  * out here. The group *labels* are not, and are translated under
  * `skillsSection.groups`.
  *
- * Grouping follows the CV. The 15 entries here are what the "15 technologies"
- * stat counts — keep them in step. PHP, Git and GitHub are not on the CV;
- * they were added later.
+ * Grouping follows the CV. The 16 entries here are what the "16 technologies"
+ * stat counts — keep them in step. PHP, Git, GitHub, .NET and MongoDB are not
+ * on the CV; they were added later.
+ *
+ * .NET sits under Tools rather than beside C#, because that group is
+ * "Programming languages" and .NET is the platform, not the language — the
+ * same reason HTML and CSS live under Web.
  */
 export const skillGroups: {
   key: SkillGroupKey;
@@ -105,7 +109,7 @@ export const skillGroups: {
     key: "databases",
     items: [
       { name: "PostgreSQL", icon: devicon("postgresql") },
-      { name: "NoSQL", icon: null },
+      { name: "MongoDB", icon: devicon("mongodb") },
       { name: "Access", icon: null },
     ],
   },
@@ -115,6 +119,9 @@ export const skillGroups: {
       { name: "Git", icon: devicon("git") },
       { name: "GitHub", icon: devicon("github") },
       { name: "Docker", icon: devicon("docker") },
+      // `dotnetcore` is the modern .NET logo; devicon's `dot-net` is the
+      // legacy .NET Framework one.
+      { name: ".NET", icon: devicon("dotnetcore") },
     ],
   },
 ];
@@ -258,7 +265,7 @@ const en = {
     ],
     stats: [
       { value: "2+", label: "Projects shipped" },
-      { value: "15", label: "Technologies" },
+      { value: "16", label: "Technologies" },
       { value: "6", label: "Languages spoken" },
     ],
   },
@@ -467,7 +474,7 @@ const de: typeof en = {
     ],
     stats: [
       { value: "2+", label: "Projekte umgesetzt" },
-      { value: "15", label: "Technologien" },
+      { value: "16", label: "Technologien" },
       { value: "6", label: "Sprachen" },
     ],
   },
