@@ -166,10 +166,15 @@ function AvailabilityToggle({
           on ? "bg-ink" : "bg-paper-border"
         }`}
       >
+        {/* `left-0` is load-bearing: without it `left` is auto and resolves
+            to the knob's static position, which lands 18px in. The animated
+            x is then added on top of that, and the "on" state hangs off the
+            right-hand end of the track. The track is 36 wide and the knob 14,
+            so 3 and 19 are the symmetric insets. */}
         <motion.span
-          animate={{ x: on ? 17 : 3 }}
+          animate={{ x: on ? 19 : 3 }}
           transition={{ duration: 0.28, ease }}
-          className="absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow"
+          className="absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-white shadow"
         />
       </span>
       <span className={on ? "text-ink" : undefined}>
