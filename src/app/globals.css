@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+/* The cinematic section is `data-cine="pin"` until it has played, then "card". It
+   pins to one screen when motion is welcome and the screen can hold it. Otherwise
+   (reduced motion, a very short screen such as 400% browser zoom, or paper) it is
+   unpinned: one plain black section that scrolls. */
+@custom-variant pinned {
+  @media (prefers-reduced-motion: no-preference) and (min-height: 340px) {
+    [data-cine="pin"] & {
+      @slot;
+    }
+  }
+}
+@custom-variant unpinned {
+  @media print, (prefers-reduced-motion: reduce), (max-height: 339.98px) {
+    @slot;
+  }
+}
+/* Already played: an ordinary project card in the page. */
+@custom-variant card {
+  [data-cine="card"] & {
+    @slot;
+  }
+}
+/* Either of those two: not pinned, for whatever reason. */
+@custom-variant flat {
+  @media print, (prefers-reduced-motion: reduce), (max-height: 339.98px) {
+    @slot;
+  }
+  [data-cine="card"] & {
+    @slot;
+  }
+}
+/* A wide window of laptop height, while pinned: the wide art still fits once the
+   blurb goes. */
+@custom-variant squat {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 998px) and (min-height: 530px) and (max-height: 639.98px) {
+    [data-cine="pin"] & {
+      @slot;
+    }
+  }
+}
+/* A phone on its side, or a short window, while pinned: anything taller than the
+   screen gets clipped rather than scrolled, so this takes the compact art. A
+   narrower window needs more height, because its row under the banner wraps. */
+@custom-variant short {
+  @media (prefers-reduced-motion: no-preference) and (min-height: 340px) and (max-height: 529.98px), (prefers-reduced-motion: no-preference) and (min-height: 340px) and (max-height: 659.98px) and (max-width: 997.98px) {
+    [data-cine="pin"] & {
+      @slot;
+    }
+  }
+}
+/* Short, with a banner too narrow for the stack tags to fit under it. Under 530 px
+   tall that is every width; above it, upright phones (under 480 px) keep the tags
+   and wrap, because they have the height. */
+@custom-variant short-narrow {
+  @media (prefers-reduced-motion: no-preference) and (min-height: 340px) and (max-height: 529.98px), (prefers-reduced-motion: no-preference) and (min-height: 340px) and (max-height: 580.98px) and (min-width: 480px) and (max-width: 997.98px), (prefers-reduced-motion: no-preference) and (min-height: 340px) and (max-height: 659.98px) and (min-width: 480px) and (max-width: 899.98px) {
+    [data-cine="pin"] & {
+      @slot;
+    }
+  }
+}
+
 @theme {
   /* Palette lifted from singh-angad.ch so the rebuild stays on-brand */
   --color-ink: #08080a;

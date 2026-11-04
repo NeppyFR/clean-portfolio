@@ -51,6 +51,20 @@ export const EMAIL = "contact@singh-angad.ch";
  */
 export const PORTRAIT_SRC: string | null = "/angad.jpg";
 
+/**
+ * The cinematic interlude that follows the projects grid, currently holding
+ * Commerce Platform. While this is false the section is not rendered at all,
+ * so it stays the off switch if the section ever holds unfinished work again:
+ * pushing to main deploys straight to production.
+ */
+export const CINEMATIC_ENABLED = true;
+
+/**
+ * The public Commerce Platform demo. While this is null the row under the
+ * banner shows no link; once the demo is published, only this line changes.
+ */
+export const COMMERCE_DEMO_URL: string | null = null;
+
 export const socials: { label: string; href: string; icon: IconName }[] = [
   { label: "GitHub", href: "https://github.com/neppyfr", icon: "github" },
   { label: "Email", href: `mailto:${EMAIL}`, icon: "mail" },
@@ -129,6 +143,29 @@ export const skillGroups: {
 const PROJECT_LINKS = {
   gradeTracker: "https://neppyfr.github.io/gradetracker/",
   trafficMesh: "https://neppyfr.github.io/traffic-mesh/",
+  werkhalleRepo: "https://github.com/NeppyFR/werkhalle",
+};
+
+/**
+ * A project card.
+ *
+ * `href` makes the whole card a link to a live demo. It is null for a project
+ * without one, and the card then renders as a plain div, which is what lets
+ * the Werkhalle card hold a button: a button nested inside a link is invalid,
+ * and unusable with a keyboard. `repo` is a separate small link for that case.
+ *
+ * Declared explicitly rather than inferred, because `de: typeof en` would
+ * otherwise infer a union of two different item shapes from the array and
+ * make `preview` unreachable.
+ */
+export type ProjectItem = {
+  name: string;
+  href: string | null;
+  desc: string;
+  tags: string[];
+  repo?: { label: string; href: string };
+  /** Renders the animated Werkhalle illustration inside the card. */
+  preview?: "werkhalle";
 };
 
 /* ── Motion constants (language-invariant) ───────────────────
@@ -161,6 +198,63 @@ export const motionSpec = {
     margin: "0px 0px -22% 0px",
     /** offset between adjacent items, giving the cascade */
     stagger: 0.14,
+  },
+
+  /**
+   * The cinematic interlude — consumed by CinematicSection.tsx.
+   *
+   * The black is not tied to scroll position. Scroll only decides *whether*
+   * the page is black: crossing a threshold starts a timed fade that runs to
+   * completion on its own, so scrolling further cannot darken it further and
+   * the page cannot be left parked on grey. What plays on the black, the
+   * title card and then the preview, does follow scroll.
+   */
+  cinematic: {
+    /**
+     * Total scroll length of the section, in viewport heights. Its inner
+     * screen sticks for all but the last 100vh of it.
+     */
+    heightVh: 300,
+    /** The page goes black when the section's top reaches this viewport line, */
+    enter: "start 55%" as const,
+    /**
+     * and comes back when its bottom reaches this one. Not as the pin lets go:
+     * that would fade up on a screen of empty paper. By here the next section
+     * is already in view, so the fade reveals something.
+     */
+    exit: "end 45%" as const,
+    /**
+     * Deadband on going black, as a fraction of the enter-to-exit range.
+     * Without it, a scroll resting exactly on a threshold can flip the state
+     * on sub-pixel movement and strobe the whole page.
+     */
+    hysteresis: 0.01,
+    /** Pixels back from the furthest point reached that count as turning back. */
+    turnBack: 8,
+    /** Milliseconds without movement that count as the page having stopped. */
+    stillMs: 200,
+    /** Seconds for the page to go black, and to come back. */
+    fade: 0.75,
+    /**
+     * Every stop below is a fraction of the pinned scroll range: 0 the moment
+     * the section tops out, 1 when its bottom reaches the foot of the viewport.
+     */
+    /** title card: in, hold, out */
+    titleStops: [0.02, 0.14, 0.4, 0.5] as [number, number, number, number],
+    /** each line lags the one above it by this much scroll progress */
+    lineStagger: 0.035,
+    /**
+     * preview: in, hold, out. It starts only once the title has gone: the two
+     * share no scroll range, because a bright banner through a fading title
+     * reads as a glitch.
+     */
+    previewStops: [0.5, 0.6, 0.92, 1] as [number, number, number, number],
+    /** the preview grows a little as it arrives */
+    previewScaleFrom: 0.94,
+    /** px of travel on the title lines */
+    y: 30,
+    /** entry blur, borrowed from the hero */
+    blur: 6,
   },
 };
 
@@ -285,7 +379,74 @@ const en = {
         desc: "A traffic simulation with no lights and no stop signs — every car runs the same rule to negotiate each crossing, on a demo grid or on real city streets.",
         tags: ["JavaScript", "Canvas", "Simulation"],
       },
-    ],
+      {
+        name: "Werkhalle",
+        // No live demo: it runs on a laptop, so only the code is linked.
+        href: null,
+        repo: { label: "GitHub", href: PROJECT_LINKS.werkhalleRepo },
+        desc: "A mini smart factory with a live digital twin. When a machine breaks, the software notices in about a tenth of a second, tests new plans on a copy of the plant and recommends the best one.",
+        tags: [
+          "Python",
+          "OPC UA",
+          "OR-Tools CP-SAT",
+          "Simulated Annealing",
+          "FastAPI",
+          "SQLite",
+        ],
+        preview: "werkhalle",
+      },
+    ] as ProjectItem[],
+  },
+
+  /** Labels for the animated Werkhalle illustration on the project card. */
+  werkhalle: {
+    illustration: "Simplified illustration",
+    a11yTitle: "Werkhalle production line, illustrated",
+    a11yDesc:
+      "A seven-machine aluminium extrusion line: casting, two presses, two furnaces, a saw and packaging. Material flows from left to right. Once every loop Press 2 fails, the software detects it, re-plans, and reroutes the work through Press 1 until Press 2 is repaired.",
+    button: "Break Press 2",
+    buttonRepair: "Repair Press 2",
+    faultTag: "Fault",
+    chipDetected: "Detected: 96 ms",
+    chipReplan: "New plan: 8.8 s",
+    scheduleLabel: "Schedule",
+    machines: {
+      guss: "Casting",
+      pr1: "Press 1",
+      pr2: "Press 2",
+      of1: "Furnace 1",
+      of2: "Furnace 2",
+      sae: "Saw",
+      vp: "Packaging",
+    },
+  },
+
+  /**
+   * The cinematic interlude's copy: the title card, then the row under the
+   * banner, which CommerceSlot reads. The banner's own labels are the one
+   * exception to "all copy lives here": they ship inside CommercePreview.tsx,
+   * a copy of the banner in its source project, recoloured black, with the brand
+   * wordmarks removed and a box as the product. Do not overwrite it with the
+   * source file.
+   */
+  cinematic: {
+    eyebrow: "The big project",
+    badge: "Static demo",
+    /** One entry per line. Each gets its own beat in the stagger, so keep
+     *  them short: this is a title card, not a paragraph. */
+    lines: ["One clothing shop.", "53 staff screens.", "Everything behind it."],
+    // "not trading yet" stays: it is true, and the page must not imply a live
+    // shop.
+    caption:
+      "A real shop platform, built and tested but not trading yet. This public version keeps the features and invents the data, so nothing here can charge anyone.",
+    /** Stands in if the section is ever rendered without a preview. */
+    slotEmpty: "Preview goes here",
+    /** The row under the banner, read by CommerceSlot. */
+    name: "Commerce Platform",
+    blurb:
+      "A complete online shop with its staff system, finances and hosting map, rebuilt as a static demo with invented data.",
+    tags: ["Next.js", "TypeScript", "Supabase", "Postgres", "Stripe", "Playwright"],
+    demoLink: "Open the demo",
   },
 
   /** Card beside the featured project. The title is a product name and
@@ -494,7 +655,59 @@ const de: typeof en = {
         desc: "Eine Verkehrssimulation ohne Ampeln und Stoppschilder — jedes Auto folgt derselben Regel, um jede Kreuzung auszuhandeln, auf einem Demo-Raster oder auf echten Stadtstrassen.",
         tags: ["JavaScript", "Canvas", "Simulation"],
       },
-    ],
+      {
+        name: "Werkhalle",
+        href: null,
+        repo: { label: "GitHub", href: PROJECT_LINKS.werkhalleRepo },
+        desc: "Eine Mini-Smart-Factory mit digitalem Zwilling. Fällt eine Maschine aus, merkt die Software das in etwa einer Zehntelsekunde, testet neue Pläne an einer Kopie des Werks und empfiehlt den besten.",
+        tags: [
+          "Python",
+          "OPC UA",
+          "OR-Tools CP-SAT",
+          "Simulated Annealing",
+          "FastAPI",
+          "SQLite",
+        ],
+        preview: "werkhalle",
+      },
+    ] as ProjectItem[],
+  },
+
+  werkhalle: {
+    illustration: "Vereinfachte Darstellung",
+    a11yTitle: "Werkhalle-Fertigungslinie, illustriert",
+    a11yDesc:
+      "Eine Strangpresslinie mit sieben Maschinen: Giessanlage, zwei Pressen, zwei Öfen, Säge und Verpackung. Das Material läuft von links nach rechts. Einmal pro Durchlauf fällt Presse 2 aus, die Software erkennt das, plant neu und leitet die Arbeit über Presse 1, bis Presse 2 repariert ist.",
+    button: "Presse 2 ausfallen lassen",
+    buttonRepair: "Presse 2 reparieren",
+    faultTag: "Störung",
+    chipDetected: "Erkannt: 96 ms",
+    chipReplan: "Neuer Plan: 8,8 s",
+    scheduleLabel: "Plan",
+    machines: {
+      // Swiss orthography: Giessanlage, never Gießanlage.
+      guss: "Giessanlage",
+      pr1: "Presse 1",
+      pr2: "Presse 2",
+      of1: "Ofen 1",
+      of2: "Ofen 2",
+      sae: "Säge",
+      vp: "Verpackung",
+    },
+  },
+
+  cinematic: {
+    eyebrow: "Das grosse Projekt",
+    badge: "Statische Demo",
+    lines: ["Ein Kleidershop.", "53 Screens fürs Team.", "Und alles dahinter."],
+    caption:
+      "Eine echte Shop-Plattform, gebaut und getestet, aber noch ohne Handel. Diese öffentliche Version behält die Funktionen und erfindet die Daten, darum kann hier niemand belastet werden.",
+    slotEmpty: "Vorschau kommt hierhin",
+    name: "Commerce Platform",
+    blurb:
+      "Ein kompletter Onlineshop mit Team-System, Finanzen und Hosting-Karte, als statische Demo mit erfundenen Daten nachgebaut.",
+    tags: ["Next.js", "TypeScript", "Supabase", "Postgres", "Stripe", "Playwright"],
+    demoLink: "Demo öffnen",
   },
 
   market: {

@@ -39,12 +39,12 @@ export function MarketCardView({ data }: { data: MarketData | null }) {
 
       {data ? (
         <>
-          <div className="mt-6 flex items-baseline gap-3">
-            <span className="text-3xl font-semibold tracking-tight tabular-nums text-white">
+          <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-3xl font-semibold tracking-tight tabular-nums text-white lg:max-xl:text-2xl">
               {money(data.last)}
             </span>
             <span
-              className={`rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ${
+              className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ${
                 data.changePct >= 0
                   ? "bg-emerald-500/15 text-emerald-400"
                   : "bg-rose-500/15 text-rose-400"
@@ -57,9 +57,9 @@ export function MarketCardView({ data }: { data: MarketData | null }) {
 
           <Chart candles={data.candles} label={t.chartLabel} />
 
-          <div className="mt-3 flex items-center justify-between text-[0.7rem] uppercase tracking-[0.14em] text-white/40">
-            <span>BTC / USD · 5m · 4h</span>
-            <span className="tabular-nums">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[0.7rem] uppercase tracking-[0.14em] text-white/40">
+            <span className="whitespace-nowrap">BTC / USD · 5m · 4h</span>
+            <span className="whitespace-nowrap tabular-nums">
               L {Math.round(data.low).toLocaleString("en-US")} · H{" "}
               {Math.round(data.high).toLocaleString("en-US")}
             </span>

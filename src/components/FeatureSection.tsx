@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { useContent } from "@/i18n";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon, PauseIcon, PlayIcon } from "./Icons";
 
-export function FeatureSection({
-  /** Server-rendered slot — this component is a client component, so the
-   *  market card is fetched on the server and passed in from page.tsx. */
-  sideCard,
-}: {
-  sideCard: ReactNode;
-}) {
+export function FeatureSection() {
   const feature = useContent().feature;
 
   return (
@@ -26,11 +20,11 @@ export function FeatureSection({
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-7">
+        {/* Full width for now; this row is where smaller projects will join it. */}
+        <div className="mt-14">
           <Reveal>
             <MediaCard />
           </Reveal>
-          <Reveal index={1}>{sideCard}</Reveal>
         </div>
       </div>
     </section>
