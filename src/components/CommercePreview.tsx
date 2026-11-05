@@ -5,10 +5,11 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState, ty
 /*
  * Moving banner for the Commerce Platform card, on a 12 s loop. It shows the two products side by side, an online
  * shop and the staff dashboard behind it, and one order walking from the first to the second: added to the bag, paid,
- * stored, the mail step failing once and passing on the second try, then a new row on the dashboard that staff pack.
+ * stored, one service failing once and passing on the second try, then a new row on the dashboard that staff pack.
+ * Which service fails is random: a new one each time round, and each time the button is pressed.
  *
  * Only transform and opacity are written, on <g> elements. One rAF driven by a ref, no React state per frame.
- * frame(t, variant) below is pure, so any moment can be rendered or tested on its own.
+ * frame(t, variant, fault) below is pure, so any moment can be rendered or tested on its own.
  */
 
 /* FRAME-START */
@@ -17,9 +18,10 @@ export const LOOP_S = 12;
 export const WIDE_FROM = 900;
 /** Reduced motion: new row in, Paid chip, tooltip on, three packing dots filled. */
 export const STILL_T = 9.45;
-export const FAULT_T = 4.4;
-/** Reduced motion: what the button renders. */
-export const FAULT_STILL_T = 5;
+/** How long a service stays down before its retry passes. */
+const FAULT_S = 1.55;
+/** Reduced motion: how far into a failure the button's still frame is. */
+const FAULT_STILL_S = 0.6;
 /** Rings that only mean something while moving, so a still frame leaves them out. */
 const PULSING = new Set(["w.pulse", "c.pulse", "w.halo", "c.halo"]);
 export const DOT_AT = [9, 9.15, 9.3, 9.45, 9.6];
@@ -27,6 +29,25 @@ export const DOT_AT = [9, 9.15, 9.3, 9.45, 9.6];
 export type Variant = "wide" | "compact";
 export type Part = { o: number; x: number; y: number; s: number; r: number };
 export type Frame = Record<string, Part>;
+/** A service that can fail. Every one of them is drawn wide; the compact art only has the three on the order's path. */
+export type Fault = "host" | "pay" | "db" | "mail" | "files";
+export const FAULTS: Record<Variant, Fault[]> = { wide: ["host", "pay", "db", "mail", "files"], compact: ["pay", "db", "mail"] };
+
+/** Reached, done and left, per stop. The packet leaves Mail at 6.2 and reaches the dashboard at 6.9 whichever service failed. */
+type Timing = { fault: number; pay: number; payOk: number; payGo: number; db: number; dbOk: number; dbGo: number; mail: number; mailOk: number };
+const AFTER_PAY = { payGo: 4.55, db: 5.2, dbOk: 5.2, dbGo: 5.45, mail: 5.95, mailOk: 5.95 };
+const ON_TIME = { pay: 2.75, payOk: 2.75, payGo: 3, db: 3.65, dbOk: 3.65, dbGo: 3.9, mail: 4.4, mailOk: 5.95 };
+const TIMINGS: Record<Fault, Timing> = {
+  // Hosting sits on the way to Payments, so everything after it runs late.
+  host: { fault: 2.55, pay: 4.3, payOk: 4.3, ...AFTER_PAY },
+  pay: { fault: 2.75, pay: 2.75, payOk: 4.3, ...AFTER_PAY },
+  db: { ...ON_TIME, fault: 3.65, dbOk: 5.2, dbGo: 5.45, mail: 5.95 },
+  mail: { ...ON_TIME, fault: 4.4 },
+  // File storage is off the order's path: mail waits on its attachment while it retries.
+  files: { ...ON_TIME, fault: 4.4 },
+};
+/** A ring and wash that never fire, for a service the order does not stop at. */
+const NEVER = -99;
 type Pt = [number, number];
 type Route = { pts: Pt[]; cum: number[]; len: number };
 type Curve = [Pt, Pt, Pt, Pt];
@@ -111,15 +132,14 @@ function curveY(c: Curve, x: number): number {
 /** Width of a word pill. A formula, so a language change needs no measuring. */
 export const pillW = (text: string, size: number): number => Math.round(text.length * size * 0.54 + size * 1.06);
 
-export const WORD_BEATS: [string, number, number][] = [
-  ["paid", 2.75, 3.4],
-  ["stored", 3.65, 4.3],
-  ["retry", 4.5, 5.7],
-  ["sent", 6, 6.7],
-];
-
-function words(out: Frame, prefix: string, x: number, y: number, t: number) {
-  for (const [id, a, b] of WORD_BEATS) {
+function words(out: Frame, prefix: string, x: number, y: number, m: Timing, t: number) {
+  const beats: [string, number, number][] = [
+    ["paid", m.payOk, m.payOk + 0.65],
+    ["stored", m.dbOk, m.dbOk + 0.65],
+    ["retry", m.fault + 0.1, m.fault + 1.3],
+    ["sent", 6, 6.7],
+  ];
+  for (const [id, a, b] of beats) {
     out[`${prefix}w.${id}`] = part(env(t, a, b, 0.12), x, y, 0.9 + 0.1 * smooth(a, a + 0.14, t));
   }
 }
@@ -149,15 +169,15 @@ function chart(out: Frame, prefix: string, c: Curve, x0: number, x1: number, t: 
 
 /* The packet rests on each service's icon, so it never covers the name. */
 const W_YS = [92, 156, 220, 284, 348];
-const W_MAIL_Y = W_YS[3];
 const W_L1 = sample([[307, 82], [360, 82], [360, 92], [449, 92], [449, 156]]);
+const W_TO_HOST = sample([[307, 82], [360, 82], [360, 92], [449, 92]]);
+const W_HOST_PAY = sample([[449, 92], [449, 156]]);
 const W_L2 = sample([[449, 156], [449, 220]]);
 const W_L3 = sample([[449, 220], [449, 284]]);
 const W_L4 = sample([[449, 284], [449, 316], [640, 316], [640, 326], [743, 326]]);
 const W_CURVE: Curve = [[832, 238], [864, 224], [892, 226], [960, 216]];
 const C_YS = [88, 165, 242];
 const C_BUS: [number, number][] = [[112, 142], [286, 316]];
-const C_MAIL_Y = C_YS[2];
 const C_SPINE = 165;
 const C_L1 = sample([[100, 88], [C_SPINE, 88]]);
 const C_L2 = sample([[C_SPINE, 88], [C_SPINE, 165]]);
@@ -166,27 +186,50 @@ const C_L4 = sample([[C_SPINE, 242], [326, 242]]);
 const C_CURVE: Curve = [[414, 166], [428, 156], [434, 150], [444, 146]];
 
 /** Data moving along every connection, all the time. A 3 s period, so t = 12 is exactly t = 0. */
-function flows(out: Frame, prefix: string, spans: [number, number][], ys: number[], mailY: number, t: number) {
-  const faulted = 1 - 0.75 * env(t, 4.4, 5.95, 0.2);
+function flows(out: Frame, prefix: string, spans: [number, number][], ys: number[], downY: number, downAt: number, t: number) {
+  const down = 1 - 0.75 * env(t, downAt, downAt + FAULT_S, 0.2);
   let n = 0;
   for (const [a, b] of spans) {
     for (const y of ys) {
       const k = (t / 3 + n * 0.13) % 1;
-      out[`${prefix}f${n}`] = part(Math.sin(Math.PI * k) * (y === mailY ? faulted : 1), lerp(a, b, k), y);
+      out[`${prefix}f${n}`] = part(Math.sin(Math.PI * k) * (y === downY ? down : 1), lerp(a, b, k), y);
       n++;
     }
   }
 }
 
-function widePacket(t: number): Pt {
-  if (t < 3) return at(W_L1, ease((t - 2.1) / 0.65));
-  if (t < 3.9) return at(W_L2, ease((t - 3) / 0.65));
-  if (t < 6.2) return at(W_L3, ease((t - 3.9) / 0.5));
-  return at(W_L4, ease((t - 6.2) / 0.7));
+/** The failing service's warning triangle and the ring around its icon. */
+function faultMarks(out: Frame, prefix: string, at: number, tri: Pt, halo: Pt, t: number) {
+  const end = at + FAULT_S;
+  const shaking = t >= at + 0.15 && t < at + 0.45;
+  const shake = shaking ? 2.5 * Math.sin((TAU * (t - at - 0.15)) / 0.1) * (1 - (t - at - 0.15) / 0.3) : 0;
+  out[`${prefix}tri`] = part(smooth(at, at + 0.18, t) * (1 - smooth(end - 0.25, end, t)), tri[0] + shake, tri[1], lerp(0.4, 1, ease((t - at) / 0.2)));
+  const pulsing = t >= at + 0.1 && t < end - 0.05;
+  const hp = pulsing ? ((t - at - 0.1) % 0.7) / 0.7 : 0;
+  out[`${prefix}halo`] = part(pulsing ? (1 - hp) * 0.8 : 0, halo[0], halo[1], 1 + 1.1 * hp);
 }
 
-function wideFrame(t: number): Frame {
+type Leg = [Route, number, number];
+/** Where the packet is on a route of legs, each a route, when it sets off and how long it takes. */
+function onLegs(legs: Leg[], t: number): Pt {
+  let i = 0;
+  while (i < legs.length - 1 && t >= legs[i + 1][1]) i++;
+  return at(legs[i][0], ease((t - legs[i][1]) / legs[i][2]));
+}
+const byFault = <T,>(make: (f: Fault) => T): Record<Fault, T> => ({ host: make("host"), pay: make("pay"), db: make("db"), mail: make("mail"), files: make("files") });
+const WIDE_LEGS = byFault((f): Leg[] => {
+  const m = TIMINGS[f];
+  const first: Leg[] = f === "host" ? [[W_TO_HOST, 2.1, 0.45], [W_HOST_PAY, m.fault + FAULT_S, 0.2]] : [[W_L1, 2.1, 0.65]];
+  return [...first, [W_L2, m.payGo, 0.65], [W_L3, m.dbGo, 0.5], [W_L4, 6.2, 0.7]];
+});
+const COMPACT_LEGS = byFault((f): Leg[] => {
+  const m = TIMINGS[f];
+  return [[C_L1, 2.35, 0.4], [C_L2, m.payGo, 0.65], [C_L3, m.dbGo, 0.5], [C_L4, 6.2, 0.7]];
+});
+
+function wideFrame(t: number, f: Fault): Frame {
   const out: Frame = {};
+  const m = TIMINGS[f];
   const w = (TAU * t) / LOOP_S;
   out["w.au0"] = part(1, 1040 + 36 * Math.cos(w), 430 + 26 * Math.sin(w));
   out["w.au1"] = part(1, 520 + 30 * Math.sin(w), 470 + 20 * Math.cos(w));
@@ -212,34 +255,35 @@ function wideFrame(t: number): Frame {
 
   // The wire
   const unlit = 1 - smooth(10.6, 11.6, t);
-  out["w.l0"] = part(smooth(2.1, 2.75, t) * unlit);
-  out["w.l1"] = part(smooth(3, 3.65, t) * unlit);
-  out["w.l2"] = part(smooth(3.9, 4.4, t) * unlit);
-  out["w.l3"] = part(smooth(6.2, 6.65, t) * unlit);
-  const pk = widePacket(t);
+  out["w.l0"] = part(smooth(2.1, 2.55, t) * unlit);
+  out["w.l1"] = part(smooth(f === "host" ? m.fault + FAULT_S : 2.5, m.pay, t) * unlit);
+  out["w.l2"] = part(smooth(m.payGo, m.db, t) * unlit);
+  out["w.l3"] = part(smooth(m.dbGo, m.mail, t) * unlit);
+  out["w.l4"] = part(smooth(6.2, 6.65, t) * unlit);
+  const pk = onLegs(WIDE_LEGS[f], t);
   out["w.pkt"] = part(smooth(2.05, 2.15, t) * (1 - smooth(6.82, 6.95, t)), pk[0], pk[1]);
 
-  flows(out, "w.", [[333, 425], [595, 686]], W_YS, W_MAIL_Y, t);
-
-  const hits: [string, Pt, number][] = [
-    ["pay", [510, 156], 2.75],
-    ["db", [510, 220], 3.65],
-    ["mail", [510, 284], 5.95],
+  const services: [Fault, number, number][] = [
+    ["host", W_YS[0], f === "host" ? m.fault + FAULT_S : NEVER],
+    ["pay", W_YS[1], m.payOk],
+    ["db", W_YS[2], m.dbOk],
+    ["mail", W_YS[3], m.mailOk],
+    ["files", W_YS[4], f === "files" ? m.fault + FAULT_S : NEVER],
   ];
-  for (const [id, pos, s] of hits) {
+  flows(out, "w.", [[333, 425], [595, 686]], W_YS, W_YS[FAULTS.wide.indexOf(f)], m.fault, t);
+  for (const [id, y, s] of services) {
     const r = ring(t, s, 0.6, 0.2, 0.9);
-    out[`w.r.${id}`] = part(r.o, pos[0], pos[1], r.s);
+    out[`w.r.${id}`] = part(r.o, 510, y, r.s);
     out[`w.h.${id}`] = part(wash(t, s));
+    out[`w.n.${id}`] = part(id === f ? 1 - 0.45 * env(t, m.fault, m.fault + FAULT_S, 0.2) : 1);
   }
 
   // The fault
-  out["w.mail"] = part(1 - 0.45 * env(t, 4.4, 5.95, 0.2));
-  const shake = t >= 4.55 && t < 4.85 ? 2.5 * Math.sin((TAU * (t - 4.55)) / 0.1) * (1 - (t - 4.55) / 0.3) : 0;
-  out["w.tri"] = part(smooth(4.4, 4.58, t) * (1 - smooth(5.7, 5.95, t)), 595 + shake, 258, lerp(0.4, 1, ease((t - 4.4) / 0.2)));
-  const hp = t >= 4.5 && t < 5.9 ? ((t - 4.5) % 0.7) / 0.7 : 0;
-  out["w.halo"] = part(t >= 4.5 && t < 5.9 ? (1 - hp) * 0.8 : 0, 449, 284, 1 + 1.1 * hp);
-  words(out, "w.", 510, 42, t);
-  out["w.head"] = part(1 - env(t, WORD_BEATS[0][1], WORD_BEATS[WORD_BEATS.length - 1][2], 0.12));
+  const faultY = W_YS[FAULTS.wide.indexOf(f)];
+  // The dashboard's wire runs across File storage's top corner, so its triangle goes on the bottom one.
+  faultMarks(out, "w.", m.fault, [595, f === "files" ? faultY + 26 : faultY - 26], [449, faultY], t);
+  words(out, "w.", 510, 42, m, t);
+  out["w.head"] = part(1 - env(t, Math.min(m.payOk, m.fault + 0.1), 6.7, 0.12));
 
   // The dashboard: the new row
   const shift = ease((t - 6.9) / 0.4);
@@ -276,15 +320,10 @@ function wideFrame(t: number): Frame {
   return out;
 }
 
-function compactPacket(t: number): Pt {
-  if (t < 3) return at(C_L1, ease((t - 2.35) / 0.4));
-  if (t < 3.9) return at(C_L2, ease((t - 3) / 0.65));
-  if (t < 6.2) return at(C_L3, ease((t - 3.9) / 0.5));
-  return at(C_L4, ease((t - 6.2) / 0.7));
-}
-
-function compactFrame(t: number): Frame {
+function compactFrame(t: number, f: Fault): Frame {
   const out: Frame = {};
+  const m = TIMINGS[f];
+  const faultY = C_YS[FAULTS.compact.indexOf(f)];
   const w = (TAU * t) / LOOP_S;
   out["c.au0"] = part(1, 420 + 22 * Math.cos(w), 310 + 16 * Math.sin(w));
   out["c.au1"] = part(1, 160 + 18 * Math.sin(w), 330 + 12 * Math.cos(w));
@@ -297,25 +336,25 @@ function compactFrame(t: number): Frame {
   const mk = ease((t - 1.25) / 1.15);
   out["c.mini"] = part(smooth(1.25, 1.35, t) * (1 - smooth(2.3, 2.4, t)), 61, lerp(190, 88, mk), lerp(0.8, 0.35, mk));
 
-  flows(out, "c.", C_BUS, C_YS, C_MAIL_Y, t);
+  flows(out, "c.", C_BUS, C_YS, faultY, m.fault, t);
   const unlit = 1 - smooth(10.6, 11.6, t);
   out["c.l0"] = part(smooth(2.35, 2.75, t) * unlit);
-  out["c.l1"] = part(smooth(3.2, 3.45, t) * unlit);
-  out["c.l2"] = part(smooth(4.05, 4.3, t) * unlit);
+  out["c.l1"] = part(smooth(m.payGo + 0.2, m.payGo + 0.45, t) * unlit);
+  out["c.l2"] = part(smooth(m.dbGo + 0.15, m.dbGo + 0.4, t) * unlit);
   out["c.l3"] = part(smooth(6.6, 6.85, t) * unlit);
-  const pk = compactPacket(t);
+  const pk = onLegs(COMPACT_LEGS[f], t);
   out["c.pkt"] = part(smooth(2.35, 2.45, t) * (1 - smooth(6.82, 6.95, t)), pk[0], pk[1]);
-  const b1 = ring(t, 2.75, 0.9, 1, 0.8);
-  const b2 = ring(t, 3.65, 0.8, 1, 0.8);
-  const b3 = ring(t, 5.9, 0.4, 1, 0.8);
-  out["c.beat"] = part(Math.max(b1.o, b2.o, b3.o), C_SPINE, t < 3.65 ? C_YS[0] : t < 5 ? C_YS[1] : C_YS[2], t < 3.65 ? b1.s : t < 5 ? b2.s : b3.s);
+  const b1 = ring(t, m.payOk, 0.9, 1, 0.8);
+  const b2 = ring(t, m.dbOk, 0.8, 1, 0.8);
+  const b3 = ring(t, m.mailOk, 0.4, 1, 0.8);
+  const beat = t >= m.mailOk ? { r: b3, y: C_YS[2] } : t >= m.dbOk ? { r: b2, y: C_YS[1] } : { r: b1, y: C_YS[0] };
+  out["c.beat"] = part(beat.r.o, C_SPINE, beat.y, beat.r.s);
 
-  out["c.mail"] = part(1 - 0.45 * env(t, 4.4, 5.95, 0.2));
-  const shake = t >= 4.55 && t < 4.85 ? 2.5 * Math.sin((TAU * (t - 4.55)) / 0.1) * (1 - (t - 4.55) / 0.3) : 0;
-  out["c.tri"] = part(smooth(4.4, 4.58, t) * (1 - smooth(5.7, 5.95, t)), 282 + shake, 217, lerp(0.4, 1, ease((t - 4.4) / 0.2)));
-  const hp = t >= 4.5 && t < 5.9 ? ((t - 4.5) % 0.7) / 0.7 : 0;
-  out["c.halo"] = part(t >= 4.5 && t < 5.9 ? (1 - hp) * 0.8 : 0, C_SPINE, C_MAIL_Y, 1 + 1.1 * hp);
-  words(out, "c.", 214, 26, t);
+  FAULTS.compact.forEach((id) => {
+    out[`c.n.${id}`] = part(id === f ? 1 - 0.45 * env(t, m.fault, m.fault + FAULT_S, 0.2) : 1);
+  });
+  faultMarks(out, "c.", m.fault, [282, faultY - 25], [C_SPINE, faultY], t);
+  words(out, "c.", 214, 26, m, t);
 
   const fresh = smooth(6.9, 7.3, t) * (1 - smooth(10.6, 11.6, t));
   out["c.tint"] = part(fresh * (1 - 0.6 * clamp01((t - 9.7) / 0.95)));
@@ -334,15 +373,16 @@ function compactFrame(t: number): Frame {
 }
 
 /** Every moving part at time `t`. Pure, and t = 12 is exactly t = 0. */
-export function frame(t: number, variant: Variant): Frame {
+export function frame(t: number, variant: Variant, fault: Fault = "mail"): Frame {
   const inLoop = ((t % LOOP_S) + LOOP_S) % LOOP_S;
-  return variant === "compact" ? compactFrame(inLoop) : wideFrame(inLoop);
+  if (variant === "wide") return wideFrame(inLoop, fault);
+  return compactFrame(inLoop, FAULTS.compact.includes(fault) ? fault : "mail");
 }
 
 export const partTransform = (p: Part): string => `translate(${p.x.toFixed(2)}px,${p.y.toFixed(2)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s.toFixed(3)})`;
 /* FRAME-END */
 
-export type CommercePreviewHandle = { seek: (t: number) => void; play: () => void; pause: () => void; readonly t: number };
+export type CommercePreviewHandle = { seek: (t: number) => void; play: () => void; pause: () => void; fail: (fault?: Fault) => void; readonly t: number };
 
 export type CommercePreviewLabels = {
   illustration: string;
@@ -380,7 +420,7 @@ export const COMMERCE_PREVIEW_LABELS: Record<"en" | "de", CommercePreviewLabels>
   en: {
     illustration: "Simplified illustration",
     fail: "Fail a step",
-    alt: "An online shop and its staff dashboard, with hosting, payments, a database, mail and file storage between them. Someone adds a product to the bag, the order is paid and stored, the mail step fails once and passes on the second try, and the order lands on the dashboard as a new row, where staff pack and ship it.",
+    alt: "An online shop and its staff dashboard, with hosting, payments, a database, mail and file storage between them. Someone adds a product to the bag, the order is paid and stored, one of the services fails once and passes on the second try, and the order lands on the dashboard as a new row, where staff pack and ship it.",
     onlineShop: "Online shop",
     shop: "Shop",
     staffSystem: "Staff system",
@@ -390,7 +430,7 @@ export const COMMERCE_PREVIEW_LABELS: Record<"en" | "de", CommercePreviewLabels>
     mail: "Mail",
     connections: "Connections",
     periods: "7D 30D 90D 1Y",
-    altCompact: "An online shop and its staff dashboard, with payments, a database and mail between them. Someone adds a product to the bag, the order is paid and stored, the mail step fails once and passes on the second try, and the order lands on the dashboard, where staff pack it.",
+    altCompact: "An online shop and its staff dashboard, with payments, a database and mail between them. Someone adds a product to the bag, the order is paid and stored, one of the services fails once and passes on the second try, and the order lands on the dashboard, where staff pack it.",
     hosting: "Hosting",
     files: "File storage",
     navDashboard: "Dashboard",
@@ -411,7 +451,7 @@ export const COMMERCE_PREVIEW_LABELS: Record<"en" | "de", CommercePreviewLabels>
   de: {
     illustration: "Vereinfachte Darstellung",
     fail: "Fehler auslösen",
-    alt: "Ein Onlineshop und das Dashboard des Teams, dazwischen Hosting, Zahlung, Datenbank, Mail und Dateispeicher. Jemand legt ein Produkt in den Warenkorb, die Bestellung wird bezahlt und gespeichert, der Mailschritt scheitert einmal und klappt beim zweiten Versuch, und die Bestellung landet als neue Zeile auf dem Dashboard, wo das Team sie packt und versendet.",
+    alt: "Ein Onlineshop und das Dashboard des Teams, dazwischen Hosting, Zahlung, Datenbank, Mail und Dateispeicher. Jemand legt ein Produkt in den Warenkorb, die Bestellung wird bezahlt und gespeichert, einer der Dienste scheitert einmal und klappt beim zweiten Versuch, und die Bestellung landet als neue Zeile auf dem Dashboard, wo das Team sie packt und versendet.",
     onlineShop: "Onlineshop",
     shop: "Shop",
     staffSystem: "Team-System",
@@ -421,7 +461,7 @@ export const COMMERCE_PREVIEW_LABELS: Record<"en" | "de", CommercePreviewLabels>
     mail: "Mail",
     connections: "Verbindungen",
     periods: "7T 30T 90T 1J",
-    altCompact: "Ein Onlineshop und das Dashboard des Teams, dazwischen Zahlung, Datenbank und Mail. Jemand legt ein Produkt in den Warenkorb, die Bestellung wird bezahlt und gespeichert, der Mailschritt scheitert einmal und klappt beim zweiten Versuch, und die Bestellung landet auf dem Dashboard, wo das Team sie packt.",
+    altCompact: "Ein Onlineshop und das Dashboard des Teams, dazwischen Zahlung, Datenbank und Mail. Jemand legt ein Produkt in den Warenkorb, die Bestellung wird bezahlt und gespeichert, einer der Dienste scheitert einmal und klappt beim zweiten Versuch, und die Bestellung landet auf dem Dashboard, wo das Team sie packt.",
     hosting: "Hosting",
     files: "Dateispeicher",
     navDashboard: "Dashboard",
@@ -738,7 +778,8 @@ function Defs({ u }: { u: string }) {
 
 const W_WIRE = "M307 82 L360 82 L360 92 L449 92 L449 316 L640 316 L640 326 L686 326";
 const W_LIT = [
-  "M307 82 L360 82 L360 92 L449 92 L449 156",
+  "M307 82 L360 82 L360 92 L449 92",
+  "M449 92 L449 156",
   "M449 156 L449 220",
   "M449 220 L449 284",
   "M449 284 L449 316 L640 316 L640 326 L686 326",
@@ -865,14 +906,22 @@ function WideArt({ u, l }: { u: string; l: L }) {
       ))}
       <Bus prefix="w." spans={[[333, 425], [595, 686]]} ys={W_YS} width={2} r={3.6} />
 
-      <ServiceNode y={W_YS[0]} l="hosting" name={l.hosting} provider="Vercel" icon={I_SERVER} />
-      <ServiceNode y={W_YS[1]} l="payments" name={l.payments} provider="Stripe" icon={I_CARD} k="w.h.pay" />
-      <ServiceNode y={W_YS[2]} l="database" name={l.database} provider="Supabase" icon={I_DB} k="w.h.db" />
-      <rect x={425} y={W_YS[3] - 26} width={170} height={52} rx={14} fill="#1a1230" />
-      <Move k="w.mail">
-        <ServiceNode y={W_YS[3]} l="mail" name={l.mail} provider="Resend" icon={I_MAIL} k="w.h.mail" />
-      </Move>
-      <ServiceNode y={W_YS[4]} l="files" name={l.files} provider="Cloudflare R2" icon={I_DRIVE} />
+      {(
+        [
+          ["host", "hosting", "Vercel", I_SERVER],
+          ["pay", "payments", "Stripe", I_CARD],
+          ["db", "database", "Supabase", I_DB],
+          ["mail", "mail", "Resend", I_MAIL],
+          ["files", "files", "Cloudflare R2", I_DRIVE],
+        ] as const
+      ).map(([id, label, provider, icon], i) => (
+        <g key={id}>
+          <rect x={425} y={W_YS[i] - 26} width={170} height={52} rx={14} fill="#1a1230" />
+          <Move k={`w.n.${id}`}>
+            <ServiceNode y={W_YS[i]} l={label} name={l[label]} provider={provider} icon={icon} k={`w.h.${id}`} />
+          </Move>
+        </g>
+      ))}
 
       {/* The shop window */}
       <g transform="translate(-18 12.7) scale(0.95)">
@@ -1097,7 +1146,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
       </g>
 
       {/* Above everything: the rings on the services, the amber fault, the packet, the word */}
-      {(["pay", "db", "mail"] as const).map((id) => (
+      {FAULTS.wide.map((id) => (
         <Move key={id} k={`w.r.${id}`}>
           <rect x={-85} y={-26} width={170} height={52} rx={14} fill="none" stroke={ACCENT_SOFT} strokeWidth={2.5} />
         </Move>
@@ -1221,12 +1270,20 @@ function CompactArt({ u, l }: { u: string; l: L }) {
         </Move>
       ))}
       <Bus prefix="c." spans={C_BUS} ys={C_YS} width={3} r={4.5} />
-      <CompactNode y={C_YS[0]} l="payments" name={l.payments} icon={I_CARD} />
-      <CompactNode y={C_YS[1]} l="database" name={l.database} icon={I_DB} />
-      <rect x={142} y={C_YS[2] - 25} width={144} height={50} rx={14} fill="#1a1230" />
-      <Move k="c.mail">
-        <CompactNode y={C_YS[2]} l="mail" name={l.mail} icon={I_MAIL} />
-      </Move>
+      {(
+        [
+          ["pay", "payments", I_CARD],
+          ["db", "database", I_DB],
+          ["mail", "mail", I_MAIL],
+        ] as const
+      ).map(([id, label, icon], i) => (
+        <g key={id}>
+          <rect x={142} y={C_YS[i] - 25} width={144} height={50} rx={14} fill="#1a1230" />
+          <Move k={`c.n.${id}`}>
+            <CompactNode y={C_YS[i]} l={label} name={l[label]} icon={icon} />
+          </Move>
+        </g>
+      ))}
       <Move k="c.tap">
         <circle r={24} fill="none" stroke={INK} strokeWidth={3} />
       </Move>
@@ -1263,9 +1320,8 @@ function CompactArt({ u, l }: { u: string; l: L }) {
  */
 export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreviewProps>(function CommercePreview({ lang, labels, className }, ref) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const [reduced, setReduced] = useState(false);
   const root = useRef<HTMLDivElement>(null);
-  const engine = useRef<{ seek: (t: number) => void; play: () => void; pause: () => void; t: () => number } | null>(null);
+  const engine = useRef<{ seek: (t: number) => void; play: () => void; pause: () => void; fail: (fault?: Fault) => void; t: () => number } | null>(null);
   const l = { ...COMMERCE_PREVIEW_LABELS[lang], ...labels };
 
   useImperativeHandle(
@@ -1274,6 +1330,7 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
       seek: (t: number) => engine.current?.seek(t),
       play: () => engine.current?.play(),
       pause: () => engine.current?.pause(),
+      fail: (fault?: Fault) => engine.current?.fail(fault),
       get t() {
         return engine.current?.t() ?? 0;
       },
@@ -1296,10 +1353,16 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
     let last = 0;
     let onScreen = false;
     let playing = true;
+    let fault = FAULTS.wide[Math.floor(Math.random() * FAULTS.wide.length)];
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Never the same one twice running, so every press visibly does something new.
+    const pickFault = () => {
+      const others = FAULTS[variant].filter((f) => f !== fault);
+      fault = others[Math.floor(Math.random() * others.length)];
+    };
 
     const renderFrame = (t: number) => {
-      const f = frame(t, variant);
+      const f = frame(t, variant, fault);
       for (const key in f) {
         const node = parts.get(key);
         if (!node) continue;
@@ -1318,7 +1381,9 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
       raf = requestAnimationFrame(tick);
       const delta = last === 0 ? 0 : Math.min(now - last, 64);
       last = now;
-      time = (time + delta / 1000) % LOOP_S;
+      const next = time + delta / 1000;
+      if (next >= LOOP_S) pickFault();
+      time = next % LOOP_S;
       renderFrame(time);
     };
 
@@ -1341,6 +1406,11 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
 
     engine.current = {
       seek,
+      fail: (chosen?: Fault) => {
+        if (chosen) fault = chosen;
+        else pickFault();
+        seek(TIMINGS[fault].fault + (media.matches ? FAULT_STILL_S : 0));
+      },
       play: () => {
         playing = true;
         sync();
@@ -1357,11 +1427,11 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
       const next: Variant = width < WIDE_FROM ? "compact" : "wide";
       if (next === variant) return;
       variant = next;
+      if (!FAULTS[variant].includes(fault)) pickFault();
       renderFrame(time);
     };
 
     const onMotion = () => {
-      setReduced(media.matches);
       if (media.matches) seek(STILL_T);
       sync();
     };
@@ -1409,7 +1479,7 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
         <span data-l="illustration">{l.illustration}</span>
         <button
           type="button"
-          onClick={() => engine.current?.seek(reduced ? FAULT_STILL_T : FAULT_T)}
+          onClick={() => engine.current?.fail()}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "0 12px", border: "1.5px solid currentColor", borderRadius: 999, background: "transparent", color: "inherit", font: "inherit", fontWeight: 500, cursor: "pointer" }}
         >
           <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
