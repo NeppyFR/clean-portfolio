@@ -14,6 +14,7 @@ import { motionSpec } from "@/content";
 import { useContent } from "@/i18n";
 
 const c = motionSpec.cinematic;
+const LEFT_AT = "cinematic-left-at";
 
 /**
  * Maps scroll progress through a function rather than useTransform's array
@@ -115,8 +116,55 @@ export function CinematicSection({
     setDark(false);
     setRetired(true);
   };
+  // A reload starts with the section at full height again, so the browser's own
+  // restoration lands up to 2200 px from where a visitor below it was. Once retired,
+  // the section keeps the position itself: one who had reached it stays retired, and
+  // one back above it sees it play again.
+  const restoreY = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const [entry] = performance.getEntriesByType("navigation");
+    const type = (entry as PerformanceNavigationTiming)?.type;
+    let left: { y: number; reached: boolean } | null = null;
+    try {
+      const raw = sessionStorage.getItem(LEFT_AT);
+      sessionStorage.removeItem(LEFT_AT);
+      if (raw && (type === "reload" || type === "back_forward")) left = JSON.parse(raw);
+      history.scrollRestoration = "auto";
+    } catch {}
+    if (!left) return;
+    if (left.reached) {
+      restoreY.current = left.y;
+      retire(null);
+      // Refused while unpinned: it must not fire on some later retire instead.
+      if (!retiredNow.current) restoreY.current = null;
+      // The preview only reads as faded because scroll has not been measured yet.
+      shownAtSwap.current = 1;
+    }
+    // Nothing above the section changes when it retires, so this also holds when
+    // retire() has refused, and the effect below only needs to redo it after the swap.
+    window.scrollTo({ top: left.y, behavior: "instant" });
+    // Only ever run once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const remember = () => {
+      const sec = ref.current;
+      if (!retiredNow.current || !sec) return;
+      try {
+        const reached = sec.getBoundingClientRect().top < window.innerHeight * 0.55;
+        sessionStorage.setItem(LEFT_AT, JSON.stringify({ y: window.scrollY, reached }));
+        history.scrollRestoration = "manual";
+      } catch {}
+    };
+    window.addEventListener("pagehide", remember);
+    return () => window.removeEventListener("pagehide", remember);
+  }, []);
   useLayoutEffect(() => {
     if (!retired) return;
+    if (restoreY.current !== null) {
+      window.scrollTo({ top: restoreY.current, behavior: "instant" });
+      restoreY.current = null;
+    }
     // The frame rather than the element with the inline opacity, which `!` holds at 1.
     if (shownAtSwap.current < 1) {
       previewRef.current?.firstElementChild?.animate(
