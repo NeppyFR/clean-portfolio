@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { HOLD_ID, LEFT_AT } from "@/lib/reloadHold";
 import {
   motion,
   transform,
@@ -14,7 +15,6 @@ import { motionSpec } from "@/content";
 import { useContent } from "@/i18n";
 
 const c = motionSpec.cinematic;
-const LEFT_AT = "cinematic-left-at";
 
 /**
  * Maps scroll progress through a function rather than useTransform's array
@@ -131,6 +131,8 @@ export function CinematicSection({
       if (raw && (type === "reload" || type === "back_forward")) left = JSON.parse(raw);
       history.scrollRestoration = "auto";
     } catch {}
+    // Before this paints, so the page appears already in place.
+    document.getElementById(HOLD_ID)?.remove();
     if (!left) return;
     if (left.reached) {
       restoreY.current = left.y;

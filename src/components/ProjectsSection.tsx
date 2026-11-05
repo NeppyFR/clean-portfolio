@@ -38,7 +38,9 @@ export function ProjectsSection({
 
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {/* Full width for now; this row is where smaller projects will join it. */}
-          <Reveal className="lg:col-span-3">
+          {/* "some": on a very short screen the 380 px card can never be 20% inside the
+              detection box when a link lands on it, so it would stay hidden. */}
+          <Reveal className="lg:col-span-3" amount="some">
             <MediaCard />
           </Reveal>
           {feature && (

@@ -18,6 +18,8 @@ type RevealProps = {
   delay?: number;
   /** Starting offset in px; defaults to a slight upward slide. */
   y?: number;
+  /** How much must be in view before firing; defaults to `reveal.amount`. */
+  amount?: number | "some";
   className?: string;
   as?: "div" | "section" | "li" | "article";
 };
@@ -37,6 +39,7 @@ export function Reveal({
   index = 0,
   delay = 0,
   y = reveal.y,
+  amount = reveal.amount,
   className,
   as = "div",
 }: RevealProps) {
@@ -53,7 +56,7 @@ export function Reveal({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{
         once: true,
-        amount: reveal.amount,
+        amount,
         margin: reveal.margin,
       }}
       transition={

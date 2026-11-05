@@ -456,7 +456,7 @@ const en = {
    *  stays as-is; the tagline is a sentence, so it gets translated. */
   market: {
     title: "Darwins Market",
-    subtitle: "Survival of the fittest strategy. bots trade, die and evolve.",
+    subtitle: "Survival of the fittest strategy. Bots trade, die and evolve.",
     comingSoon: "Coming soon",
     unavailable: "Market data unavailable right now.",
     chartLabel: "Bitcoin candlestick chart, last 4 hours in 5 minute candles",

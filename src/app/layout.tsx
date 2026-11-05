@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { content } from "@/content";
 import { LanguageProvider } from "@/i18n";
+import { HOLD_SCRIPT } from "@/lib/reloadHold";
 import "./globals.css";
 
 const site = content.en.site;
@@ -34,6 +35,9 @@ export default function RootLayout({
   return (
     // lang is updated client-side by LanguageProvider when the user switches.
     <html lang="en" className={inter.variable}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: HOLD_SCRIPT }} />
+      </head>
       <body>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
