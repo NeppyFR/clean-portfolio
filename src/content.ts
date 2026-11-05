@@ -439,6 +439,8 @@ const en = {
     // shop.
     caption:
       "A real shop platform, built and tested but not trading yet. This public version keeps the features and invents the data, so nothing here can charge anyone.",
+    /** The caption's first sentence: all the retired card keeps of it. */
+    status: "A real shop platform, built and tested but not trading yet.",
     /** Stands in if the section is ever rendered without a preview. */
     slotEmpty: "Preview goes here",
     /** The row under the banner, read by CommerceSlot. */
@@ -702,6 +704,7 @@ const de: typeof en = {
     lines: ["Ein Kleidershop.", "53 Screens fürs Team.", "Und alles dahinter."],
     caption:
       "Eine echte Shop-Plattform, gebaut und getestet, aber noch ohne Handel. Diese öffentliche Version behält die Funktionen und erfindet die Daten, darum kann hier niemand belastet werden.",
+    status: "Eine echte Shop-Plattform, gebaut und getestet, aber noch ohne Handel.",
     slotEmpty: "Vorschau kommt hierhin",
     name: "Commerce Platform",
     blurb:

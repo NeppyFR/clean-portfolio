@@ -20,6 +20,8 @@ export const STILL_T = 9.45;
 export const FAULT_T = 4.4;
 /** Reduced motion: what the button renders. */
 export const FAULT_STILL_T = 5;
+/** Rings that only mean something while moving, so a still frame leaves them out. */
+const PULSING = new Set(["w.pulse", "c.pulse", "w.halo", "c.halo"]);
 export const DOT_AT = [9, 9.15, 9.3, 9.45, 9.6];
 
 export type Variant = "wide" | "compact";
@@ -154,12 +156,14 @@ const W_L3 = sample([[449, 220], [449, 284]]);
 const W_L4 = sample([[449, 284], [449, 316], [640, 316], [640, 326], [743, 326]]);
 const W_CURVE: Curve = [[832, 238], [864, 224], [892, 226], [960, 216]];
 const C_YS = [88, 165, 242];
+const C_BUS: [number, number][] = [[112, 142], [286, 316]];
 const C_MAIL_Y = C_YS[2];
-const C_L1 = sample([[118, 236], [137, 236], [137, 88], [171, 88]]);
-const C_L2 = sample([[171, 88], [171, 165]]);
-const C_L3 = sample([[171, 165], [171, 242]]);
-const C_L4 = sample([[171, 242], [171, 282], [295, 282], [295, 240], [316, 240]]);
-const C_CURVE: Curve = [[420, 174], [436, 164], [444, 160], [460, 156]];
+const C_SPINE = 165;
+const C_L1 = sample([[100, 88], [C_SPINE, 88]]);
+const C_L2 = sample([[C_SPINE, 88], [C_SPINE, 165]]);
+const C_L3 = sample([[C_SPINE, 165], [C_SPINE, 242]]);
+const C_L4 = sample([[C_SPINE, 242], [326, 242]]);
+const C_CURVE: Curve = [[414, 166], [428, 156], [434, 150], [444, 146]];
 
 /** Data moving along every connection, all the time. A 3 s period, so t = 12 is exactly t = 0. */
 function flows(out: Frame, prefix: string, spans: [number, number][], ys: number[], mailY: number, t: number) {
@@ -284,44 +288,47 @@ function compactFrame(t: number): Frame {
   const w = (TAU * t) / LOOP_S;
   out["c.au0"] = part(1, 420 + 22 * Math.cos(w), 310 + 16 * Math.sin(w));
   out["c.au1"] = part(1, 160 + 18 * Math.sin(w), 330 + 12 * Math.cos(w));
-  out["c.bob"] = part(1, 68, 103 + 2.5 * Math.sin(2 * w), 1.25);
+  out["c.bob"] = part(1, 61, 190 + 2.5 * Math.sin(2 * w), 1.25);
 
   const tp = t >= 0.2 && t < 1.25 ? ((t - 0.2) % 0.525) / 0.525 : 0;
-  out["c.tap"] = part(t >= 0.2 && t < 1.25 ? (1 - tp) * 0.8 : 0, 68, 236, 0.6 + 1.1 * tp);
+  out["c.tap"] = part(t >= 0.2 && t < 1.25 ? (1 - tp) * 0.8 : 0, 61, 88, 0.6 + 1.1 * tp);
   const press = smooth(0.95, 1.05, t) * (1 - smooth(1.05, 1.3, t));
-  out["c.cta"] = part(1, 68, 236, 1 - 0.05 * press);
+  out["c.cta"] = part(1, 61, 88, 1 - 0.05 * press);
   const mk = ease((t - 1.25) / 1.15);
-  out["c.mini"] = part(smooth(1.25, 1.35, t) * (1 - smooth(2.3, 2.4, t)), 68, lerp(103, 236, mk), lerp(0.8, 0.35, mk));
+  out["c.mini"] = part(smooth(1.25, 1.35, t) * (1 - smooth(2.3, 2.4, t)), 61, lerp(190, 88, mk), lerp(0.8, 0.35, mk));
 
-  flows(out, "c.", [[126, 148], [284, 306]], C_YS, C_MAIL_Y, t);
-  out["c.lit"] = part(smooth(2.4, 3, t) * (1 - smooth(10.6, 11.6, t)));
+  flows(out, "c.", C_BUS, C_YS, C_MAIL_Y, t);
+  const unlit = 1 - smooth(10.6, 11.6, t);
+  out["c.l0"] = part(smooth(2.35, 2.75, t) * unlit);
+  out["c.l1"] = part(smooth(3.2, 3.45, t) * unlit);
+  out["c.l2"] = part(smooth(4.05, 4.3, t) * unlit);
+  out["c.l3"] = part(smooth(6.6, 6.85, t) * unlit);
   const pk = compactPacket(t);
   out["c.pkt"] = part(smooth(2.35, 2.45, t) * (1 - smooth(6.82, 6.95, t)), pk[0], pk[1]);
   const b1 = ring(t, 2.75, 0.9, 1, 0.8);
   const b2 = ring(t, 3.65, 0.8, 1, 0.8);
   const b3 = ring(t, 5.9, 0.4, 1, 0.8);
-  out["c.beat"] = part(Math.max(b1.o, b2.o, b3.o), 171, t < 3.65 ? C_YS[0] : t < 5 ? C_YS[1] : C_YS[2], t < 3.65 ? b1.s : t < 5 ? b2.s : b3.s);
+  out["c.beat"] = part(Math.max(b1.o, b2.o, b3.o), C_SPINE, t < 3.65 ? C_YS[0] : t < 5 ? C_YS[1] : C_YS[2], t < 3.65 ? b1.s : t < 5 ? b2.s : b3.s);
 
   out["c.mail"] = part(1 - 0.45 * env(t, 4.4, 5.95, 0.2));
   const shake = t >= 4.55 && t < 4.85 ? 2.5 * Math.sin((TAU * (t - 4.55)) / 0.1) * (1 - (t - 4.55) / 0.3) : 0;
-  out["c.tri"] = part(smooth(4.4, 4.58, t) * (1 - smooth(5.7, 5.95, t)), 280 + shake, 216, lerp(0.4, 1, ease((t - 4.4) / 0.2)));
+  out["c.tri"] = part(smooth(4.4, 4.58, t) * (1 - smooth(5.7, 5.95, t)), 282 + shake, 217, lerp(0.4, 1, ease((t - 4.4) / 0.2)));
   const hp = t >= 4.5 && t < 5.9 ? ((t - 4.5) % 0.7) / 0.7 : 0;
-  out["c.halo"] = part(t >= 4.5 && t < 5.9 ? (1 - hp) * 0.8 : 0, 171, C_MAIL_Y, 1 + 1.1 * hp);
-  words(out, "c.", 216, 24, t);
+  out["c.halo"] = part(t >= 4.5 && t < 5.9 ? (1 - hp) * 0.8 : 0, C_SPINE, C_MAIL_Y, 1 + 1.1 * hp);
+  words(out, "c.", 214, 26, t);
 
   const fresh = smooth(6.9, 7.3, t) * (1 - smooth(10.6, 11.6, t));
-  out["c.n0"] = part(1 - fresh);
-  out["c.n1"] = part(fresh);
   out["c.tint"] = part(fresh * (1 - 0.6 * clamp01((t - 9.7) / 0.95)));
   const rr = ring(t, 6.9, 0.6, 0.06, 0.9);
-  out["c.r.row"] = part(rr.o, 388, 242, rr.s);
-  rolls(out, "c.", [["k0.0", 7], ["k0.1", 7.1], ["k0.2", 7.2]], 31, t);
-  chart(out, "c.", C_CURVE, 424, 460, t);
+  out["c.r.row"] = part(rr.o, 393, 242, rr.s);
+  rolls(out, "c.", [["k0.0", 7], ["k0.1", 7.1], ["k0.2", 7.2]], 36, t);
+  chart(out, "c.", C_CURVE, 414, 444, t);
 
-  const vp = t >= 8 && t < 9.75 ? ((t - 8) % 0.875) / 0.875 : 0;
-  out["c.vtap"] = part(t >= 8 && t < 9.75 ? (1 - vp) * 0.75 : 0, 388, 258, 0.6 + 1.1 * vp);
-  const packed = smooth(9.8, 10.1, t) * (1 - smooth(10.6, 11.6, t));
-  out["c.s.paid"] = part(1 - packed);
+  const vp = t >= 8 && t < 9.4 ? ((t - 8) % 0.7) / 0.7 : 0;
+  out["c.vtap"] = part(t >= 8 && t < 9.4 ? (1 - vp) * 0.75 : 0, 393, 242, 0.6 + 1.1 * vp);
+  const packed = smooth(9.8, 10.1, t) * (1 - smooth(10.6, 11.1, t));
+  out["c.s.none"] = part(1 - smooth(6.75, 6.95, t) + smooth(11.1, 11.6, t));
+  out["c.s.paid"] = part(smooth(6.95, 7.3, t) * (1 - smooth(9.8, 10.1, t)));
   out["c.s.packed"] = part(packed);
   return out;
 }
@@ -429,7 +436,7 @@ export const COMMERCE_PREVIEW_LABELS: Record<"en" | "de", CommercePreviewLabels>
     statusShipped: "Versendet",
     paid: "bezahlt",
     stored: "gespeichert",
-    retry: "nochmals",
+    retry: "erneut",
     sent: "gerendert",
   },
 };
@@ -440,30 +447,31 @@ type L = CommercePreviewLabels;
 
 /*
  * This copy has moved well away from the source in
- * portfolio-ecommerce-platform/preview-banner: it runs on black, shows no brand
- * name, sells a box, and puts the connected services at the centre with both
- * windows scaled back. Do not copy that file over this one. SURFACE is what was
+ * portfolio-ecommerce-platform/preview-banner: it runs on black in the portfolio's own
+ * purple, shows no brand name, sells a box, puts the connected services at the
+ * centre with both windows scaled back, and has a much sparer drawing for phones. Do not copy that file over this one. SURFACE is what was
  * white, and INK is what was dark navy.
  */
 const SURFACE = "#0a0a0f";
-const INK = "#f1f4ff";
-const MUTE = "#9aa6cc";
-const HAIR = "#2e3650";
-const WIRE = "#8fb0ff";
-const SOLID = "#6f9bff";
-/** Shading on the product, which stays blue on any background. */
-const SHADE = "#0a1f63";
-const BLUE = "#2f6bff";
-const SKY = "#6fd3ff";
-const VIOLET = "#8c7bff";
-const ACTIVE = "#172142";
+const INK = "#ece9f2";
+const MUTE = "#9a90ad";
+const HAIR = "#2f2742";
+const WIRE = "#cdb6fb";
+/** Shading on the product, which stays purple on any background. */
+const SHADE = "#2e1065";
+/* The portfolio's accent: the same values as --color-accent and --color-accent-deep in
+   globals.css. Written out because they go into gradient stops as well as fills. */
+const ACCENT = "#a371f7";
+const ACCENT_DEEP = "#7c3aed";
+const ACCENT_SOFT = "#cdb6fb";
+const ACTIVE = "#241a42";
 const AMBER = "#ffb020";
 const AMBER_INK = "#7f4600";
 
 /** The art is two drawings. Only this rule picks one, so server HTML is right before any script runs. */
 export const CP_CSS =
   ".cp-root{container:cp/inline-size}" +
-  ".cp-stage{overflow:hidden;border-radius:16px;background:linear-gradient(135deg,#000 0%,#070b1d 45%,#0c1d4d 100%)}" +
+  ".cp-stage{overflow:hidden;border-radius:16px;background:linear-gradient(135deg,#000 0%,#0b0714 45%,#2a1259 100%)}" +
   ".cp-w,.cp-c{width:100%;height:auto;overflow:visible}" +
   ".cp-w{display:block;aspect-ratio:1200/420}" +
   ".cp-c{display:none;aspect-ratio:480/300}" +
@@ -610,8 +618,8 @@ function Pills({ prefix, l, size }: { prefix: string; l: L; size: number }) {
 const TONES = {
   paid: ["#0f2a1c", "#34d27b"],
   pending: ["#2f2208", "#f5b53d"],
-  packed: ["#201a4a", "#a99bff"],
-  shipped: ["#12234d", "#6f9bff"],
+  packed: ["#241a42", "#cdb6fb"],
+  shipped: ["#2c1760", "#a371f7"],
 } as const;
 
 /** A status chip around its own centre. 112 wide because German `Versendet` needs it. */
@@ -630,7 +638,7 @@ function Chip({ tone, l, text }: { tone: keyof typeof TONES; l: keyof L; text: s
 function Row({ u, no, total }: { u: string; no: string; total: string }) {
   return (
     <>
-      <rect x={666} y={-12} width={24} height={24} rx={6} fill="#161d33" />
+      <rect x={666} y={-12} width={24} height={24} rx={6} fill="#1c1530" />
       <g transform="translate(678 0)">
         <ProductBox scale={0.28} fill={`url(#${u}box)`} />
       </g>
@@ -644,7 +652,7 @@ function Row({ u, no, total }: { u: string; no: string; total: string }) {
   );
 }
 
-const LINK = "#3f6fe0";
+const LINK = ACCENT_DEEP;
 
 /** A connected service, centred on `y`: its role, the provider behind it, and a wash the order can light. */
 function ServiceNode({ y, l, name, provider, icon, k }: { y: number; l: keyof L; name: string; provider: string; icon: ReactNode; k?: string }) {
@@ -653,7 +661,7 @@ function ServiceNode({ y, l, name, provider, icon, k }: { y: number; l: keyof L;
       <rect x={425} y={y - 26} width={170} height={52} rx={14} fill={SURFACE} stroke={LINK} strokeWidth={1.5} />
       {k ? (
         <Move k={k}>
-          <rect x={425} y={y - 26} width={170} height={52} rx={14} fill="#16335e" />
+          <rect x={425} y={y - 26} width={170} height={52} rx={14} fill="#2c1a55" />
         </Move>
       ) : null}
       <rect x={435} y={y - 14} width={28} height={28} rx={8} fill={ACTIVE} />
@@ -674,12 +682,12 @@ function ServiceNode({ y, l, name, provider, icon, k }: { y: number; l: keyof L;
 function CompactNode({ y, l, name, icon }: { y: number; l: keyof L; name: string; icon: ReactNode }) {
   return (
     <>
-      <rect x={148} y={y - 31} width={136} height={62} rx={14} fill={SURFACE} stroke={LINK} strokeWidth={2} />
-      <rect x={158} y={y - 13} width={26} height={26} rx={7} fill={ACTIVE} />
-      <Icon x={162} y={y - 9} size={18} color={WIRE}>
+      <rect x={142} y={y - 25} width={144} height={50} rx={14} fill={SURFACE} stroke={LINK} strokeWidth={2} />
+      <rect x={C_SPINE - 13} y={y - 13} width={26} height={26} rx={7} fill={ACTIVE} />
+      <Icon x={C_SPINE - 9} y={y - 9} size={18} color={WIRE}>
         {icon}
       </Icon>
-      <Txt x={190} y={y + 6} size={17} w={650} l={l}>
+      <Txt x={184} y={y + 6} size={17} w={650} l={l}>
         {name}
       </Txt>
     </>
@@ -690,39 +698,39 @@ function Defs({ u }: { u: string }) {
   return (
     <>
       <radialGradient id={`${u}a1`}>
-        <stop offset="0" stopColor={VIOLET} stopOpacity=".75" />
-        <stop offset="1" stopColor={VIOLET} stopOpacity="0" />
+        <stop offset="0" stopColor={ACCENT_DEEP} stopOpacity=".75" />
+        <stop offset="1" stopColor={ACCENT_DEEP} stopOpacity="0" />
       </radialGradient>
       <radialGradient id={`${u}a2`}>
-        <stop offset="0" stopColor={BLUE} stopOpacity=".6" />
-        <stop offset="1" stopColor={BLUE} stopOpacity="0" />
+        <stop offset="0" stopColor={ACCENT_DEEP} stopOpacity=".6" />
+        <stop offset="1" stopColor={ACCENT_DEEP} stopOpacity="0" />
       </radialGradient>
       <radialGradient id={`${u}a3`}>
         <stop offset="0" stopColor="#000" stopOpacity=".95" />
         <stop offset="1" stopColor="#000" stopOpacity="0" />
       </radialGradient>
       <radialGradient id={`${u}corner`}>
-        <stop offset="0" stopColor={VIOLET} stopOpacity=".38" />
-        <stop offset=".6" stopColor={SKY} stopOpacity=".2" />
-        <stop offset="1" stopColor={SKY} stopOpacity="0" />
+        <stop offset="0" stopColor={ACCENT_DEEP} stopOpacity=".38" />
+        <stop offset=".6" stopColor={ACCENT} stopOpacity=".2" />
+        <stop offset="1" stopColor={ACCENT} stopOpacity="0" />
       </radialGradient>
       <linearGradient id={`${u}tile`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#0d1a38" />
-        <stop offset=".55" stopColor="#0e2a4d" />
-        <stop offset="1" stopColor="#231c55" />
+        <stop offset="0" stopColor="#150f26" />
+        <stop offset=".55" stopColor="#1c1333" />
+        <stop offset="1" stopColor="#2a1a52" />
       </linearGradient>
       <linearGradient id={`${u}box`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor={SKY} />
-        <stop offset=".5" stopColor={BLUE} />
-        <stop offset="1" stopColor={VIOLET} />
+        <stop offset="0" stopColor={ACCENT_SOFT} />
+        <stop offset=".5" stopColor={ACCENT} />
+        <stop offset="1" stopColor={ACCENT_DEEP} />
       </linearGradient>
       <linearGradient id={`${u}cta`} x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor={BLUE} />
-        <stop offset="1" stopColor="#6a55f0" />
+        <stop offset="0" stopColor={ACCENT_DEEP} />
+        <stop offset="1" stopColor={ACCENT} />
       </linearGradient>
       <linearGradient id={`${u}area`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={BLUE} stopOpacity=".34" />
-        <stop offset="1" stopColor={SKY} stopOpacity=".02" />
+        <stop offset="0" stopColor={ACCENT} stopOpacity=".34" />
+        <stop offset="1" stopColor={ACCENT} stopOpacity=".02" />
       </linearGradient>
     </>
   );
@@ -736,8 +744,14 @@ const W_LIT = [
   "M449 284 L449 316 L640 316 L640 326 L686 326",
 ];
 const W_LINE = "M666 256 C700 252 716 240 748 242 S800 252 832 238 S892 226 960 216";
-const C_LINE = "M316 186 C336 183 352 176 372 178 S404 184 420 174 S444 160 460 156";
-const C_WIRE = "M118 236 L137 236 L137 88 L171 88 L171 282 L295 282 L295 240 L306 240";
+const C_LINE = "M328 178 C346 175 360 168 378 170 S400 176 414 166 S434 150 444 146";
+const C_WIRE = `M100 88 L${C_SPINE} 88 L${C_SPINE} 242 L326 242`;
+const C_LIT = [
+  `M100 88 L${C_SPINE} 88`,
+  `M${C_SPINE} 88 L${C_SPINE} 165`,
+  `M${C_SPINE} 165 L${C_SPINE} 242`,
+  `M${C_SPINE} 242 L326 242`,
+];
 const CIRC = 2 * Math.PI * 36;
 
 /** Digits sit at fixed places, centred, because the host font's digits are not all one width. */
@@ -777,8 +791,8 @@ function Bus({ prefix, spans, ys, width, r }: { prefix: string; spans: [number, 
       {spans.map(([a, b]) =>
         ys.map((y) => (
           <g key={`${a}-${y}`}>
-            <path d={`M${a} ${y} L${b} ${y}`} stroke={SKY} strokeOpacity={0.14} strokeWidth={width * 3.4} />
-            <path d={`M${a} ${y} L${b} ${y}`} stroke={SKY} strokeOpacity={0.7} strokeWidth={width} />
+            <path d={`M${a} ${y} L${b} ${y}`} stroke={ACCENT} strokeOpacity={0.14} strokeWidth={width * 3.4} />
+            <path d={`M${a} ${y} L${b} ${y}`} stroke={ACCENT} strokeOpacity={0.7} strokeWidth={width} />
           </g>
         )),
       )}
@@ -846,7 +860,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
       <path d={W_WIRE} fill="none" stroke={WIRE} strokeWidth={1.8} strokeLinejoin="round" />
       {W_LIT.map((d, i) => (
         <Move key={d} k={`w.l${i}`}>
-          <path d={d} fill="none" stroke={BLUE} strokeWidth={3.4} strokeLinejoin="round" />
+          <path d={d} fill="none" stroke={ACCENT} strokeWidth={3.4} strokeLinejoin="round" />
         </Move>
       ))}
       <Bus prefix="w." spans={[[333, 425], [595, 686]]} ys={W_YS} width={2} r={3.6} />
@@ -854,7 +868,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
       <ServiceNode y={W_YS[0]} l="hosting" name={l.hosting} provider="Vercel" icon={I_SERVER} />
       <ServiceNode y={W_YS[1]} l="payments" name={l.payments} provider="Stripe" icon={I_CARD} k="w.h.pay" />
       <ServiceNode y={W_YS[2]} l="database" name={l.database} provider="Supabase" icon={I_DB} k="w.h.db" />
-      <rect x={425} y={W_YS[3] - 26} width={170} height={52} rx={14} fill="#0f2038" />
+      <rect x={425} y={W_YS[3] - 26} width={170} height={52} rx={14} fill="#1a1230" />
       <Move k="w.mail">
         <ServiceNode y={W_YS[3]} l="mail" name={l.mail} provider="Resend" icon={I_MAIL} k="w.h.mail" />
       </Move>
@@ -884,7 +898,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
         </Txt>
         {["S", "M", "L", "XL"].map((z, i) => (
           <g key={z}>
-            <rect x={56 + i * 40} y={318} width={34} height={24} rx={8} fill={z === "M" ? `url(#${u}cta)` : "#171b2a"} />
+            <rect x={56 + i * 40} y={318} width={34} height={24} rx={8} fill={z === "M" ? `url(#${u}cta)` : "#1b1726"} />
             <Txt x={73 + i * 40} y={336} size={16} w={600} a="middle" c={z === "M" ? "#fff" : INK}>
               {z}
             </Txt>
@@ -902,7 +916,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
           </Move>
         </g>
         <Move k="w.badge">
-          <circle r={9} fill={BLUE} />
+          <circle r={9} fill={ACCENT_DEEP} />
           <Txt y={5.5} size={16} w={700} a="middle" c="#fff">
             1
           </Txt>
@@ -927,15 +941,15 @@ function WideArt({ u, l }: { u: string; l: L }) {
           {l.navDashboard}
         </Txt>
         <rect x={940} y={66} width={124} height={28} rx={14} fill={SURFACE} stroke={HAIR} />
-        <Icon x={950} y={72} size={16} color="#8ea3d6">
+        <Icon x={950} y={72} size={16} color={MUTE}>
           {I_SEARCH}
         </Icon>
-        <rect x={974} y={76} width={72} height={8} rx={4} fill="#1d2235" />
+        <rect x={974} y={76} width={72} height={8} rx={4} fill="#211c2e" />
         <Icon x={1077} y={69} size={22} color={INK}>
           {I_BELL}
         </Icon>
         <Move k="w.bell">
-          <circle r={5} fill={VIOLET} stroke={SURFACE} strokeWidth={1.5} />
+          <circle r={5} fill={ACCENT} stroke={SURFACE} strokeWidth={1.5} />
         </Move>
         <circle cx={1126} cy={80} r={15} fill={ACTIVE} />
         <Txt x={1126} y={86} size={16} w={650} a="middle">
@@ -989,7 +1003,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
         {/* Revenue */}
         <rect x={652} y={174} width={324} height={106} rx={14} fill={SURFACE} />
         <path d={`${W_LINE} L960 272 L666 272Z`} fill={`url(#${u}area)`} />
-        <path d={W_LINE} fill="none" stroke={BLUE} strokeWidth={2.6} />
+        <path d={W_LINE} fill="none" stroke={ACCENT} strokeWidth={2.6} />
         <g clipPath={`url(#${u}chart)`}>
           <Move k="w.cover">
             <rect x={900} y={206} width={76} height={74} fill={SURFACE} />
@@ -1008,10 +1022,10 @@ function WideArt({ u, l }: { u: string; l: L }) {
           </g>
         ))}
         <Move k="w.pulse">
-          <circle r={7} fill="none" stroke={BLUE} strokeWidth={2} />
+          <circle r={7} fill="none" stroke={ACCENT} strokeWidth={2} />
         </Move>
         <Move k="w.dot">
-          <circle r={5.5} fill={BLUE} stroke={SURFACE} strokeWidth={2} />
+          <circle r={5.5} fill={ACCENT} stroke={SURFACE} strokeWidth={2} />
         </Move>
         <Move k="w.tip">
           <rect x={-42} y={-13} width={84} height={26} rx={8} fill={INK} />
@@ -1024,9 +1038,9 @@ function WideArt({ u, l }: { u: string; l: L }) {
         <rect x={988} y={174} width={156} height={106} rx={14} fill={SURFACE} stroke={HAIR} />
         <Move k="w.donut">
           <g transform="rotate(-90)" fill="none" strokeWidth={13}>
-            <circle r={36} stroke={BLUE} strokeDasharray={`${0.52 * CIRC} ${CIRC}`} />
-            <circle r={36} stroke={SKY} strokeDasharray={`${0.28 * CIRC} ${CIRC}`} strokeDashoffset={-0.52 * CIRC} />
-            <circle r={36} stroke={VIOLET} strokeDasharray={`${0.2 * CIRC} ${CIRC}`} strokeDashoffset={-0.8 * CIRC} />
+            <circle r={36} stroke={ACCENT} strokeDasharray={`${0.52 * CIRC} ${CIRC}`} />
+            <circle r={36} stroke={ACCENT_SOFT} strokeDasharray={`${0.28 * CIRC} ${CIRC}`} strokeDashoffset={-0.52 * CIRC} />
+            <circle r={36} stroke={ACCENT_DEEP} strokeDasharray={`${0.2 * CIRC} ${CIRC}`} strokeDashoffset={-0.8 * CIRC} />
           </g>
         </Move>
 
@@ -1050,7 +1064,7 @@ function WideArt({ u, l }: { u: string; l: L }) {
           </Move>
           <Move k="w.new">
             <Move k="w.tint">
-              <rect x={658} y={-14} width={480} height={28} rx={8} fill="#131c38" />
+              <rect x={658} y={-14} width={480} height={28} rx={8} fill="#1e1538" />
             </Move>
             <Row u={u} no="AL-1151" total="CHF 89.00" />
             <Move k="w.c.paid">
@@ -1065,27 +1079,27 @@ function WideArt({ u, l }: { u: string; l: L }) {
           </Move>
           <Move k="w.dt">
             {[0, 1, 2, 3, 4].map((i) => (
-              <circle key={i} cx={910 + 20 * i} cy={330} r={4} fill={SURFACE} stroke="#6a78a6" strokeWidth={1.5} />
+              <circle key={i} cx={910 + 20 * i} cy={330} r={4} fill={SURFACE} stroke="#7d7296" strokeWidth={1.5} />
             ))}
           </Move>
           {[0, 1, 2, 3, 4].map((i) => (
             <Move key={i} k={`w.d${i}`}>
-              <circle r={4} fill={SOLID} />
+              <circle r={4} fill={ACCENT} />
             </Move>
           ))}
         </g>
         <Move k="w.vrip">
-          <circle r={13} fill="none" stroke={VIOLET} strokeWidth={2.5} />
+          <circle r={13} fill="none" stroke={ACCENT_SOFT} strokeWidth={2.5} />
         </Move>
         <Move k="w.vcur">
-          <path d={CURSOR} fill={VIOLET} stroke={SURFACE} strokeWidth={1.5} strokeLinejoin="round" />
+          <path d={CURSOR} fill={ACCENT_SOFT} stroke={SURFACE} strokeWidth={1.5} strokeLinejoin="round" />
         </Move>
       </g>
 
       {/* Above everything: the rings on the services, the amber fault, the packet, the word */}
       {(["pay", "db", "mail"] as const).map((id) => (
         <Move key={id} k={`w.r.${id}`}>
-          <rect x={-85} y={-26} width={170} height={52} rx={14} fill="none" stroke={SKY} strokeWidth={2.5} />
+          <rect x={-85} y={-26} width={170} height={52} rx={14} fill="none" stroke={ACCENT_SOFT} strokeWidth={2.5} />
         </Move>
       ))}
       <Move k="w.tri">
@@ -1095,27 +1109,29 @@ function WideArt({ u, l }: { u: string; l: L }) {
         <circle r={13} fill="none" stroke={AMBER} strokeWidth={3} />
       </Move>
       <Move k="w.pkt">
-        <circle r={11} fill={BLUE} stroke={INK} strokeWidth={2} />
-        <ProductBox scale={0.2} fill="#fff" tint={BLUE} tape={BLUE} />
+        <circle r={11} fill={ACCENT_DEEP} stroke={INK} strokeWidth={2} />
+        <ProductBox scale={0.2} fill="#fff" tint={ACCENT_DEEP} tape={ACCENT_DEEP} />
       </Move>
       <Pills prefix="w." l={l} size={17} />
     </svg>
   );
 }
 
+/**
+ * What a phone gets. At this size every extra word and inner box reads as clutter,
+ * so the shop is a product and a button, the staff side is a number, its chart and
+ * one status, and the wires run straight.
+ */
 function CompactArt({ u, l }: { u: string; l: L }) {
   return (
     <svg className="cp-c" viewBox="0 0 480 300" role="img" aria-label={l.altCompact}>
       <defs>
         <Defs u={u} />
         <clipPath id={`${u}win`}>
-          <rect x={306.5} y={40.5} width={163} height={249} rx={17.5} />
-        </clipPath>
-        <clipPath id={`${u}k0`}>
-          <rect x={316} y={50} width={144} height={68} rx={12} />
+          <rect x={316.5} y={40.5} width={153} height={249} rx={17.5} />
         </clipPath>
         <clipPath id={`${u}v0`}>
-          <rect x={349} y={83} width={84} height={30} />
+          <rect x={353} y={63} width={62} height={36} />
         </clipPath>
       </defs>
       <Move k="c.au0">
@@ -1124,92 +1140,74 @@ function CompactArt({ u, l }: { u: string; l: L }) {
       <Move k="c.au1">
         <circle r={170} fill={`url(#${u}a2)`} />
       </Move>
-      <circle cx={216} cy={165} r={130} fill={`url(#${u}a2)`} opacity={0.6} />
-      <Txt x={12} y={30} size={24} w={650} l="shop">
+      <circle cx={214} cy={165} r={130} fill={`url(#${u}a2)`} opacity={0.6} />
+      <Txt x={12} y={29} size={22} w={650} l="shop">
         {l.shop}
       </Txt>
-      <Txt x={306} y={30} size={24} w={650} l="staffSystem">
+      <Txt x={316} y={29} size={22} w={650} l="staffSystem">
         {l.staffSystem}
       </Txt>
 
-      {/* The shop, as a phone */}
-      <rect x={13} y={44} width={116} height={250} rx={18} fill="#000" opacity={0.5} />
-      <rect x={10} y={40} width={116} height={250} rx={18} fill={SURFACE} stroke={HAIR} />
-      <rect x={18} y={48} width={100} height={110} rx={12} fill={`url(#${u}tile)`} />
+      {/* The shop */}
+      <rect x={13} y={44} width={102} height={250} rx={18} fill="#000" opacity={0.5} />
+      <rect x={10} y={40} width={102} height={250} rx={18} fill={`url(#${u}tile)`} stroke={HAIR} />
       <Move k="c.bob">
         <ProductBox fill={`url(#${u}box)`} />
       </Move>
-      <Txt x={20} y={190} size={24} w={650}>
-        CHF 89
-      </Txt>
       <Move k="c.cta">
-        <rect x={-50} y={-27} width={100} height={54} rx={16} fill={`url(#${u}cta)`} />
-        <Icon x={-18} y={-18} size={36} color="#fff">
+        <rect x={-39} y={-23} width={78} height={46} rx={15} fill={`url(#${u}cta)`} />
+        <Icon x={-14} y={-14} size={28} color="#fff">
           {I_BAG}
         </Icon>
       </Move>
 
       {/* The staff window */}
-      <rect x={309} y={44} width={164} height={250} rx={18} fill="#000" opacity={0.5} />
-      <rect x={306} y={40} width={164} height={250} rx={18} fill={SURFACE} stroke={HAIR} />
-      <g clipPath={`url(#${u}k0)`}>
-        <circle cx={440} cy={62} r={40} fill={`url(#${u}corner)`} />
-      </g>
-      <rect x={316} y={50} width={144} height={68} rx={12} fill="none" stroke={HAIR} />
-      <Txt x={326} y={73} size={21} c={MUTE} l="revenue">
-        {l.revenue}
-      </Txt>
-      <Digit x={334} y={106} size={26}>
+      <rect x={319} y={44} width={154} height={250} rx={18} fill="#000" opacity={0.5} />
+      <rect x={316} y={40} width={154} height={250} rx={18} fill={SURFACE} stroke={HAIR} />
+      <Digit x={337} y={92} size={30}>
         2
       </Digit>
-      <Digit x={345} y={106} size={26}>
+      <Digit x={350} y={92} size={30}>
         {"'"}
       </Digit>
       <g clipPath={`url(#${u}v0)`}>
-        <Roll k="c.k0.0" x={357} y={106} size={26} h={31} from="2" to="3" />
-        <Roll k="c.k0.1" x={375} y={106} size={26} h={31} from="3" to="2" />
-        <Roll k="c.k0.2" x={393} y={106} size={26} h={31} from="7" to="6" />
+        <Roll k="c.k0.0" x={363} y={92} size={30} h={36} from="2" to="3" />
+        <Roll k="c.k0.1" x={384} y={92} size={30} h={36} from="3" to="2" />
+        <Roll k="c.k0.2" x={405} y={92} size={30} h={36} from="7" to="6" />
       </g>
 
-      <path d={`${C_LINE} L460 196 L316 196Z`} fill={`url(#${u}area)`} />
-      <path d={C_LINE} fill="none" stroke={BLUE} strokeWidth={3} />
+      <path d={`${C_LINE} L444 190 L328 190Z`} fill={`url(#${u}area)`} />
+      <path d={C_LINE} fill="none" stroke={ACCENT} strokeWidth={3} />
       <g clipPath={`url(#${u}win)`}>
         <Move k="c.cover">
-          <rect x={424} y={130} width={46} height={66} fill={SURFACE} />
+          <rect x={414} y={118} width={56} height={72} fill={SURFACE} />
         </Move>
         <Move k="c.pulse">
-          <circle r={8} fill="none" stroke={BLUE} strokeWidth={2.5} />
+          <circle r={8} fill="none" stroke={ACCENT} strokeWidth={2.5} />
         </Move>
       </g>
       <Move k="c.dot">
-        <circle r={6} fill={BLUE} stroke={SURFACE} strokeWidth={2} />
+        <circle r={6} fill={ACCENT} stroke={SURFACE} strokeWidth={2} />
       </Move>
 
-      {/* The order row */}
-      <rect x={316} y={204} width={144} height={76} rx={12} fill={SURFACE} />
+      {/* The order: only its status, which is the part that changes */}
+      <rect x={326} y={214} width={134} height={56} rx={12} fill={SURFACE} />
       <Move k="c.tint">
-        <rect x={316} y={204} width={144} height={76} rx={12} fill="#131c38" />
+        <rect x={326} y={214} width={134} height={56} rx={12} fill="#1e1538" />
       </Move>
-      <rect x={316} y={204} width={144} height={76} rx={12} fill="none" stroke={HAIR} />
-      <Move k="c.n0">
-        <Txt x={326} y={234} size={23} w={650}>
-          AL-1150
-        </Txt>
-      </Move>
-      <Move k="c.n1">
-        <Txt x={326} y={234} size={23} w={650}>
-          AL-1151
-        </Txt>
+      <rect x={326} y={214} width={134} height={56} rx={12} fill="none" stroke={HAIR} />
+      <Move k="c.s.none">
+        <rect x={340} y={238} width={70} height={8} rx={4} fill={HAIR} />
       </Move>
       <Move k="c.s.paid">
-        <circle cx={332} cy={256} r={5} fill={TONES.paid[1]} />
-        <Txt x={344} y={263} size={22} w={600} l="statusPaid">
+        <circle cx={343} cy={242} r={5} fill={TONES.paid[1]} />
+        <Txt x={355} y={250} size={22} w={600} l="statusPaid">
           {l.statusPaid}
         </Txt>
       </Move>
       <Move k="c.s.packed">
-        <circle cx={332} cy={256} r={5} fill={TONES.packed[1]} />
-        <Txt x={344} y={263} size={22} w={600} l="statusPacked">
+        <circle cx={343} cy={242} r={5} fill={TONES.packed[1]} />
+        <Txt x={355} y={250} size={22} w={600} l="statusPacked">
           {l.statusPacked}
         </Txt>
       </Move>
@@ -1217,24 +1215,26 @@ function CompactArt({ u, l }: { u: string; l: L }) {
       {/* The connections, and everything on top */}
       <path d={C_WIRE} fill="none" stroke={SURFACE} strokeOpacity={0.85} strokeWidth={6} strokeLinejoin="round" />
       <path d={C_WIRE} fill="none" stroke={WIRE} strokeWidth={2} strokeLinejoin="round" />
-      <Move k="c.lit">
-        <path d={C_WIRE} fill="none" stroke={BLUE} strokeWidth={3.4} strokeLinejoin="round" />
-      </Move>
-      <Bus prefix="c." spans={[[126, 148], [284, 306]]} ys={C_YS} width={3} r={4.5} />
+      {C_LIT.map((d, i) => (
+        <Move key={d} k={`c.l${i}`}>
+          <path d={d} fill="none" stroke={ACCENT} strokeWidth={3.4} strokeLinejoin="round" />
+        </Move>
+      ))}
+      <Bus prefix="c." spans={C_BUS} ys={C_YS} width={3} r={4.5} />
       <CompactNode y={C_YS[0]} l="payments" name={l.payments} icon={I_CARD} />
       <CompactNode y={C_YS[1]} l="database" name={l.database} icon={I_DB} />
-      <rect x={148} y={C_YS[2] - 31} width={136} height={62} rx={14} fill="#0f2038" />
+      <rect x={142} y={C_YS[2] - 25} width={144} height={50} rx={14} fill="#1a1230" />
       <Move k="c.mail">
         <CompactNode y={C_YS[2]} l="mail" name={l.mail} icon={I_MAIL} />
       </Move>
       <Move k="c.tap">
-        <circle r={30} fill="none" stroke={INK} strokeWidth={3} />
+        <circle r={24} fill="none" stroke={INK} strokeWidth={3} />
       </Move>
       <Move k="c.vtap">
-        <circle r={24} fill="none" stroke={VIOLET} strokeWidth={3} />
+        <circle r={24} fill="none" stroke={ACCENT_SOFT} strokeWidth={3} />
       </Move>
       <Move k="c.r.row">
-        <rect x={-72} y={-38} width={144} height={76} rx={12} fill="none" stroke={BLUE} strokeWidth={3} />
+        <rect x={-67} y={-28} width={134} height={56} rx={12} fill="none" stroke={ACCENT} strokeWidth={3} />
       </Move>
       <Move k="c.mini">
         <ProductBox fill={`url(#${u}box)`} />
@@ -1243,16 +1243,16 @@ function CompactArt({ u, l }: { u: string; l: L }) {
         <Triangle size={30} />
       </Move>
       <Move k="c.beat">
-        <circle r={13} fill="none" stroke={SKY} strokeWidth={3} />
+        <circle r={13} fill="none" stroke={ACCENT_SOFT} strokeWidth={3} />
       </Move>
       <Move k="c.halo">
         <circle r={13} fill="none" stroke={AMBER} strokeWidth={3} />
       </Move>
       <Move k="c.pkt">
-        <circle r={10} fill={BLUE} stroke={INK} strokeWidth={2} />
-        <ProductBox scale={0.18} fill="#fff" tint={BLUE} tape={BLUE} />
+        <circle r={10} fill={ACCENT_DEEP} stroke={INK} strokeWidth={2} />
+        <ProductBox scale={0.18} fill="#fff" tint={ACCENT_DEEP} tape={ACCENT_DEEP} />
       </Move>
-      <Pills prefix="c." l={l} size={24} />
+      <Pills prefix="c." l={l} size={20} />
     </svg>
   );
 }
@@ -1304,7 +1304,7 @@ export const CommercePreview = forwardRef<CommercePreviewHandle, CommercePreview
         const node = parts.get(key);
         if (!node) continue;
         const part = f[key];
-        const opacity = part.o.toFixed(3);
+        const opacity = (media.matches && PULSING.has(key) ? 0 : part.o).toFixed(3);
         const transform = partTransform(part);
         const sig = `${opacity}|${transform}`;
         if (written.get(key) === sig) continue;

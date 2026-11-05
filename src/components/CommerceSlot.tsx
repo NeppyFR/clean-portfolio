@@ -21,9 +21,9 @@ const HEIGHT_CAP =
  * row with the name, blurb, stack and demo link, sharing the banner's edges. A
  * client component because page.tsx cannot read the language.
  *
- * Under about 1200 px wide the blurb takes its own line, so the name and tags can
- * meet both edges. A short narrow screen drops the tags too and centres what is
- * left, which may then run wider than the small banner above it.
+ * On a phone the blurb goes. Under about 1200 px wide it takes its own line, so the
+ * name and tags can meet both edges. A short narrow screen drops the tags too and
+ * centres what is left, which may then run wider than the small banner above it.
  */
 export function CommerceSlot() {
   const { lang } = useLanguage();
@@ -41,14 +41,22 @@ export function CommerceSlot() {
         <h3 className="text-base font-semibold tracking-tight text-ink-text short:text-sm">
           {t.name}
         </h3>
-        <p className="min-w-[min(100%,18rem)] flex-1 text-pretty text-sm leading-snug text-ink-muted min-[728px]:max-[1199px]:order-last min-[728px]:max-[1199px]:basis-full squat:hidden short:hidden">
+        {/* Once the section has retired there is no title card, and this sentence
+            must stay on the page. Above the tags on a phone, last on anything wider. */}
+        <p className="hidden basis-full text-pretty text-sm leading-snug text-ink-muted card:block min-[728px]:order-[10000]">
+          {t.status}
+        </p>
+        <p className="min-w-[min(100%,18rem)] flex-1 text-pretty text-sm leading-snug text-ink-muted max-[728px]:hidden min-[728px]:max-[1199px]:order-last min-[728px]:max-[1199px]:basis-full squat:hidden short:hidden">
           {t.blurb}
         </p>
         <ul className="flex flex-wrap gap-1.5 max-[538px]:max-w-[22rem] short-narrow:hidden">
-          {t.tags.map((tag) => (
+          {t.tags.map((tag, i) => (
             <li
               key={tag}
-              className="rounded-full border border-ink-border px-2.5 py-0.5 text-xs text-ink-muted"
+              // One row on a phone: the first three are enough at that size.
+              className={`rounded-full border border-ink-border px-2.5 py-0.5 text-xs text-ink-muted${
+                i > 2 ? " max-[540px]:hidden" : ""
+              }`}
             >
               {tag}
             </li>
@@ -65,11 +73,6 @@ export function CommerceSlot() {
             <ArrowUpRightIcon width={14} height={14} />
           </a>
         )}
-        {/* Once the section has retired there is no title card, and this sentence
-            must stay on the page. */}
-        <p className="order-last hidden basis-full text-pretty text-sm leading-snug text-ink-muted card:block">
-          {t.caption}
-        </p>
       </div>
     </div>
   );
