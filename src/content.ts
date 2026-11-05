@@ -63,7 +63,8 @@ export const CINEMATIC_ENABLED = true;
  * The public Commerce Platform demo. While this is null the row under the
  * banner shows no link; once the demo is published, only this line changes.
  */
-export const COMMERCE_DEMO_URL: string | null = null;
+export const COMMERCE_DEMO_URL: string | null =
+  "https://neppyfr.github.io/portfolio-ecommerce-platform/";
 
 export const socials: { label: string; href: string; icon: IconName }[] = [
   { label: "GitHub", href: "https://github.com/neppyfr", icon: "github" },
