@@ -10,7 +10,7 @@ export function FeatureSection() {
   const feature = useContent().feature;
 
   return (
-    <section className="relative bg-paper px-6 pb-28 text-ink sm:px-8 lg:pb-36">
+    <section className="relative bg-paper px-6 pb-14 text-ink sm:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Two-tone heading: solid black clause, gray continuation */}
         <Reveal>
@@ -19,13 +19,6 @@ export function FeatureSection() {
             <span className="text-black/25">{feature.headingMuted}</span>
           </h2>
         </Reveal>
-
-        {/* Full width for now; this row is where smaller projects will join it. */}
-        <div className="mt-14">
-          <Reveal>
-            <MediaCard />
-          </Reveal>
-        </div>
       </div>
     </section>
   );
@@ -33,7 +26,7 @@ export function FeatureSection() {
 
 /* ── Dark media card with circular play button ─────────────── */
 
-function MediaCard() {
+export function MediaCard() {
   const [playing, setPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduced = useReducedMotion();
@@ -78,7 +71,7 @@ function MediaCard() {
         type="button"
         onClick={toggle}
         aria-label={playing ? pauseLabel : playLabel}
-        className="group absolute left-1/2 top-1/2 z-10 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
+        className="group absolute left-1/2 top-[34%] z-20 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full sm:top-1/2"
       >
         <span className="absolute inset-0 rounded-full border border-white/25 transition-transform duration-500 group-hover:scale-110" />
         <span className="absolute inset-[10px] rounded-full border border-white/15 transition-transform duration-500 group-hover:scale-105" />
@@ -91,7 +84,7 @@ function MediaCard() {
         </span>
       </button>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-end justify-between gap-4 p-7">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-end justify-between gap-4 p-7">
         <div>
           <h3 className="text-xl font-semibold tracking-tight text-white">
             {title}
@@ -104,7 +97,7 @@ function MediaCard() {
           href={href}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors duration-300 hover:border-white/35 hover:text-white"
+          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 transition-colors duration-300 hover:border-white/35 hover:text-white"
         >
           {linkLabel}
           <ArrowUpRightIcon width={15} height={15} />

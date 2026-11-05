@@ -144,6 +144,7 @@ const PROJECT_LINKS = {
   gradeTracker: "https://neppyfr.github.io/gradetracker/",
   trafficMesh: "https://neppyfr.github.io/traffic-mesh/",
   werkhalleRepo: "https://github.com/NeppyFR/werkhalle",
+  sentinel: "https://sentinel-shooting-group.ch",
 };
 
 /**
@@ -374,10 +375,10 @@ const en = {
         tags: ["React", "Vite", "Cloud sync"],
       },
       {
-        name: "Traffic Mesh",
-        href: PROJECT_LINKS.trafficMesh,
-        desc: "A traffic simulation with no lights and no stop signs — every car runs the same rule to negotiate each crossing, on a demo grid or on real city streets.",
-        tags: ["JavaScript", "Canvas", "Simulation"],
+        name: "Sentinel Shooting Group",
+        href: PROJECT_LINKS.sentinel,
+        desc: "A client website for a shooting-sport group in German-speaking Switzerland, with its courses, training and guided sessions. Static pages, no runtime dependencies.",
+        tags: ["Node.js", "Cloudflare Workers", "Playwright"],
       },
       {
         name: "Werkhalle",
@@ -652,10 +653,10 @@ const de: typeof en = {
         tags: ["React", "Vite", "Cloud-Sync"],
       },
       {
-        name: "Traffic Mesh",
-        href: PROJECT_LINKS.trafficMesh,
-        desc: "Eine Verkehrssimulation ohne Ampeln und Stoppschilder — jedes Auto folgt derselben Regel, um jede Kreuzung auszuhandeln, auf einem Demo-Raster oder auf echten Stadtstrassen.",
-        tags: ["JavaScript", "Canvas", "Simulation"],
+        name: "Sentinel Shooting Group",
+        href: PROJECT_LINKS.sentinel,
+        desc: "Eine Kundenwebsite für eine Schiesssport-Gruppe in der Deutschschweiz, mit ihren Kursen, Trainings und Schiessguides. Statische Seiten, keine Laufzeit-Abhängigkeiten.",
+        tags: ["Node.js", "Cloudflare Workers", "Playwright"],
       },
       {
         name: "Werkhalle",

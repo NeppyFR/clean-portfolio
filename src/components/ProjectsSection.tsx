@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { ProjectItem } from "@/content";
 import { useContent } from "@/i18n";
+import { MediaCard } from "./FeatureSection";
 import { Reveal } from "./Reveal";
 import { ArrowUpRightIcon, GithubIcon } from "./Icons";
 import { WerkhallePreview } from "./WerkhallePreview";
@@ -36,6 +37,10 @@ export function ProjectsSection({
         </Reveal>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          {/* Full width for now; this row is where smaller projects will join it. */}
+          <Reveal className="lg:col-span-3">
+            <MediaCard />
+          </Reveal>
           {feature && (
             <Reveal className="lg:col-span-2">
               <Card p={feature} />
@@ -68,7 +73,9 @@ export function MoreProjects() {
 function Card({ p }: { p: ProjectItem }) {
   const body = (
     <>
-      <div className="flex items-start justify-between gap-4">
+      <div
+        className={`flex items-start justify-between gap-x-4 gap-y-3${p.repo ? " flex-wrap" : ""}`}
+      >
         <h3 className="text-2xl font-semibold tracking-tight">{p.name}</h3>
         {p.href && (
           <ArrowUpRightIcon
