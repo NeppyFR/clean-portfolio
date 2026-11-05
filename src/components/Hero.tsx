@@ -4,11 +4,11 @@ import { useEffect } from "react";
 import {
   motion,
   useMotionValue,
-  useReducedMotion,
   useSpring,
   useTransform,
   type Variants,
 } from "framer-motion";
+import { useReducedMotionAfterMount } from "@/lib/useReducedMotionAfterMount";
 import { CursorBackground } from "./CursorBackground";
 import { motionSpec, socials } from "@/content";
 import { useContent } from "@/i18n";
@@ -53,7 +53,7 @@ const reducedFade: Variants = {
 
 export function Hero() {
   const t = useContent();
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionAfterMount();
 
   // Headline parallax — drifts a few px *opposite* the cursor for depth.
   const px = useMotionValue(0);
@@ -76,6 +76,10 @@ export function Hero() {
     return () => window.removeEventListener("pointermove", onMove);
   }, [px, py, reduced]);
 
+  // Framer reads `initial` once and lets a running animation finish on its old
+  // transition, so the reduced entrance only holds on a fresh mount. Keying on
+  // this remounts these elements when the setting arrives, before any paint.
+  const entrance = reduced ? "reduced" : "full";
   const container = reduced ? reducedFade : headlineContainer;
   const child = reduced ? reducedFade : headlineLine;
 
@@ -90,6 +94,7 @@ export function Hero() {
         <div className="flex flex-1 flex-col gap-14 lg:flex-row lg:items-start lg:justify-between lg:gap-10 xl:gap-16">
           {/* ── Headline ─────────────────────────────────── */}
           <motion.h1
+            key={`headline-${entrance}`}
             variants={container}
             initial="hidden"
             animate="show"
@@ -112,6 +117,7 @@ export function Hero() {
 
           {/* ── Status card ──────────────────────────────── */}
           <motion.aside
+            key={`status-${entrance}`}
             initial={
               reduced
                 ? { opacity: 0 }
@@ -148,6 +154,7 @@ export function Hero() {
 
         {/* ── Socials, bottom-left ───────────────────────── */}
         <motion.ul
+          key={`socials-${entrance}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease, delay: reduced ? 0.2 : 0.95 }}
@@ -181,6 +188,7 @@ export function Hero() {
 
       {/* ── Giant faint wordmark, fades in last ──────────── */}
       <motion.div
+        key={`wordmark-${entrance}`}
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

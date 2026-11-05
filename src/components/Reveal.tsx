@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionAfterMount } from "@/lib/useReducedMotionAfterMount";
 import type { ReactNode } from "react";
 import { motionSpec } from "@/content";
 
@@ -39,24 +40,27 @@ export function Reveal({
   className,
   as = "div",
 }: RevealProps) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionAfterMount();
   const Tag = motion[as];
   const totalDelay = index * reveal.stagger + delay;
 
   return (
     <Tag
-      initial={reduced ? { opacity: 0 } : { opacity: 0, y }}
-      whileInView={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      // Framer reads `initial` once, on the render that has to match the server,
+      // and a value left out of the target falls back to `initial`. So the slide
+      // stays in both, and reduced motion zeroes it instantly instead.
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{
         once: true,
         amount: reveal.amount,
         margin: reveal.margin,
       }}
-      transition={{
-        duration: reduced ? 0.3 : reveal.duration,
-        ease,
-        delay: reduced ? 0 : totalDelay,
-      }}
+      transition={
+        reduced
+          ? { duration: 0.3, ease, y: { duration: 0 } }
+          : { duration: reveal.duration, ease, delay: totalDelay }
+      }
       className={className}
     >
       {children}

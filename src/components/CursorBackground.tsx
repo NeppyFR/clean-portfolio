@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterMount } from "@/lib/useReducedMotionAfterMount";
 import { ShaderBackground } from "./ShaderBackground";
 
 /**
@@ -85,7 +85,7 @@ export function CursorBackground({
   /** Single source of truth for scroll position — a ref, never state, so
    *  scrolling never re-renders the tree. */
   const scrollRef = useRef(0);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionAfterMount();
 
   /* ── Scroll ramp ──────────────────────────────────────────
    * Writes the colour straight to the DOM node. Runs regardless of

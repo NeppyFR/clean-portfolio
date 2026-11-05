@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotionAfterMount } from "@/lib/useReducedMotionAfterMount";
 import { motionSpec } from "@/content";
 import { useContent } from "@/i18n";
 import { RefreshIcon } from "./Icons";
@@ -19,7 +20,7 @@ import { LanguageToggle } from "./LanguageToggle";
 export function Navbar() {
   const t = useContent();
   const [compact, setCompact] = useState(false);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionAfterMount();
 
   useEffect(() => {
     // Switch once we've scrolled roughly out of the hero.
@@ -39,6 +40,8 @@ export function Navbar() {
 
   return (
     <motion.header
+      // The reduced entrance only holds on a fresh mount: see Hero.tsx.
+      key={reduced ? "reduced" : "full"}
       initial={reduced ? { opacity: 0 } : { opacity: 0, y: -28 }}
       animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{

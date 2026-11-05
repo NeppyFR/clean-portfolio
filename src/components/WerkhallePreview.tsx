@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterMount } from "@/lib/useReducedMotionAfterMount";
 import { useContent } from "@/i18n";
 
 /* ── Geometry ────────────────────────────────────────────────
@@ -123,7 +123,7 @@ const MACHINES: {
  */
 export function WerkhallePreview() {
   const t = useContent().werkhalle;
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionAfterMount();
   const uid = useId();
   const titleId = uid + "-title";
   const descId = uid + "-desc";
