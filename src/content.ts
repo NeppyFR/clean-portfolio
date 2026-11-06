@@ -370,16 +370,16 @@ const en = {
     heading: "Projects",
     items: [
       {
-        name: "Grade Tracker",
-        href: PROJECT_LINKS.gradeTracker,
-        desc: "A web app for tracking school grades on the Swiss 1–6 scale, with weighted exams, live per-class averages, and cloud sync.",
-        tags: ["React", "Vite", "Cloud sync"],
-      },
-      {
         name: "Sentinel Shooting Group",
         href: PROJECT_LINKS.sentinel,
         desc: "A client website for a shooting-sport group in German-speaking Switzerland, with its courses, training and guided sessions. Static pages, no runtime dependencies.",
         tags: ["Node.js", "Cloudflare Workers", "Playwright"],
+      },
+      {
+        name: "Grade Tracker",
+        href: PROJECT_LINKS.gradeTracker,
+        desc: "A web app for tracking school grades on the Swiss 1–6 scale, with weighted exams, live per-class averages, and cloud sync.",
+        tags: ["React", "Vite", "Cloud sync"],
       },
       {
         name: "Werkhalle",
@@ -648,16 +648,16 @@ const de: typeof en = {
     heading: "Projekte",
     items: [
       {
-        name: "Grade Tracker",
-        href: PROJECT_LINKS.gradeTracker,
-        desc: "Eine Web-App zum Verfolgen von Schulnoten auf der Schweizer Skala 1–6, mit gewichteten Prüfungen, laufenden Fachdurchschnitten und Cloud-Sync.",
-        tags: ["React", "Vite", "Cloud-Sync"],
-      },
-      {
         name: "Sentinel Shooting Group",
         href: PROJECT_LINKS.sentinel,
         desc: "Eine Kundenwebsite für eine Schiesssport-Gruppe in der Deutschschweiz, mit ihren Kursen, Trainings und Schiessguides. Statische Seiten, keine Laufzeit-Abhängigkeiten.",
         tags: ["Node.js", "Cloudflare Workers", "Playwright"],
+      },
+      {
+        name: "Grade Tracker",
+        href: PROJECT_LINKS.gradeTracker,
+        desc: "Eine Web-App zum Verfolgen von Schulnoten auf der Schweizer Skala 1–6, mit gewichteten Prüfungen, laufenden Fachdurchschnitten und Cloud-Sync.",
+        tags: ["React", "Vite", "Cloud-Sync"],
       },
       {
         name: "Werkhalle",

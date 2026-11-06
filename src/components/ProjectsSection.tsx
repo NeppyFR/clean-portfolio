@@ -55,15 +55,15 @@ export function ProjectsSection({
   );
 }
 
-/** The smaller projects, below the big one. */
+/** The smaller projects, below the big one. The first, client work, gets a little more room. */
 export function MoreProjects() {
   const rest = useContent().projects.items.filter((p) => !p.preview);
 
   return (
     <section className="relative bg-paper px-6 pb-28 text-ink sm:px-8 unpinned:pt-28 lg:pb-36 lg:unpinned:pt-36">
-      <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2">
+      <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-5">
         {rest.map((p, i) => (
-          <Reveal key={p.name} index={i}>
+          <Reveal key={p.name} index={i} className={i === 0 ? "lg:col-span-3" : "lg:col-span-2"}>
             <Card p={p} />
           </Reveal>
         ))}
